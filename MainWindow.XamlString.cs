@@ -742,20 +742,29 @@ namespace FaceitDemoManager
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
 
-                                            <!-- Название действия -->
-                                            <DataGridTemplateColumn Header=""Действие в игре"" Width=""250"" IsReadOnly=""True"">
+                                            <!-- Действие в игре -->
+                                            <DataGridTemplateColumn Header=""Действие в игре"" Width=""200"">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
-                                                        <TextBlock Text=""{Binding ActionName}"" Foreground=""White"" FontWeight=""SemiBold"" VerticalAlignment=""Center"" Margin=""5,0,0,0""/>
+                                                        <TextBox Text=""{Binding ActionName, UpdateSourceTrigger=PropertyChanged}"" Height=""25"" VerticalContentAlignment=""Center"" Margin=""2""/>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
 
                                             <!-- Клавиша (Hotkey) -->
-                                            <DataGridTemplateColumn Header=""Клавиша (например: p, j, leftarrow)"" Width=""*"" IsReadOnly=""False"">
+                                            <DataGridTemplateColumn Header=""Клавиша"" Width=""100"">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <TextBox Text=""{Binding Key, UpdateSourceTrigger=PropertyChanged}"" Height=""25"" VerticalContentAlignment=""Center"" Margin=""2""/>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+
+                                            <!-- Команда в CS2 -->
+                                            <DataGridTemplateColumn Header=""Консольная команда в CS2"" Width=""*"">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <TextBox Text=""{Binding Command, UpdateSourceTrigger=PropertyChanged}"" Height=""25"" VerticalContentAlignment=""Center"" Margin=""2""/>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
@@ -768,8 +777,12 @@ namespace FaceitDemoManager
                                         <ColumnDefinition Width=""*""/>
                                         <ColumnDefinition Width=""Auto""/>
                                     </Grid.ColumnDefinitions>
-                                    <CheckBox Name=""ChkAutoApplyBinds"" Content=""Автоматически применять бинды при запуске демок"" IsChecked=""True"" VerticalAlignment=""Center""/>
-                                    <Button Name=""BtnResetBinds"" Grid.Column=""1"" Content=""🔄 Сбросить бинды по умолчанию"" Style=""{StaticResource ModernBtn}"" Height=""32"" Padding=""15,0""/>
+                                    <StackPanel Orientation=""Horizontal"" VerticalAlignment=""Center"">
+                                        <CheckBox Name=""ChkAutoApplyBinds"" Content=""Применять при запуске"" IsChecked=""True"" VerticalAlignment=""Center"" Margin=""0,0,15,0""/>
+                                        <Button Name=""BtnAddBind"" Content=""➕ Добавить бинд"" Style=""{StaticResource ModernBtn}"" Background=""#10b981"" Height=""32"" Padding=""12,0"" Margin=""0,0,8,0""/>
+                                        <Button Name=""BtnDeleteBind"" Content=""❌ Удалить"" Style=""{StaticResource ModernBtn}"" Background=""#ef4444"" Height=""32"" Padding=""12,0""/>
+                                    </StackPanel>
+                                    <Button Name=""BtnResetBinds"" Grid.Column=""1"" Content=""🔄 Сбросить по умолчанию"" Style=""{StaticResource ModernBtn}"" Height=""32"" Padding=""15,0""/>
                                 </Grid>
                             </Grid>
                         </Grid>

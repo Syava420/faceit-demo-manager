@@ -37,6 +37,7 @@ namespace FaceitDemoManager
             list.Add(new DemoBind() { IsEnabled = true, ActionName = "Замедление (0.5x)", Key = "j", Command = "demo_timescale 0.5" });
             list.Add(new DemoBind() { IsEnabled = true, ActionName = "Обычная скорость (1x)", Key = "k", Command = "demo_timescale 1" });
             list.Add(new DemoBind() { IsEnabled = true, ActionName = "Ускорение (2x)", Key = "l", Command = "demo_timescale 2" });
+            list.Add(new DemoBind() { IsEnabled = true, ActionName = "Ускорение (4x)", Key = "o", Command = "demo_timescale 4" });
             list.Add(new DemoBind() { IsEnabled = true, ActionName = "Быстрая перемотка (5x)", Key = ";", Command = "demo_timescale 5" });
             list.Add(new DemoBind() { IsEnabled = true, ActionName = "Предыдущий раунд", Key = "[", Command = "demoui; slot12" });
             list.Add(new DemoBind() { IsEnabled = true, ActionName = "Следующий раунд", Key = "]", Command = "demoui; slot13" });
@@ -103,6 +104,10 @@ namespace FaceitDemoManager
                                     existing.IsEnabled = isEnabled;
                                     existing.Key = key;
                                     existing.Command = cmd;
+                                }
+                                else
+                                {
+                                    settings.Binds.Add(new DemoBind() { IsEnabled = isEnabled, ActionName = action, Key = key, Command = cmd });
                                 }
                             }
                         }

@@ -64,6 +64,8 @@ namespace FaceitDemoManager
         private DataGrid dgvBinds;
         private CheckBox chkAutoApplyBinds;
         private Button btnResetBinds;
+        private Button btnAddBind;
+        private Button btnDeleteBind;
 
         // Footer / Progress
         private TextBlock lblStatus;
@@ -150,6 +152,8 @@ namespace FaceitDemoManager
             dgvBinds = (DataGrid)root.FindName("DgvBinds");
             chkAutoApplyBinds = (CheckBox)root.FindName("ChkAutoApplyBinds");
             btnResetBinds = (Button)root.FindName("BtnResetBinds");
+            btnAddBind = (Button)root.FindName("BtnAddBind");
+            btnDeleteBind = (Button)root.FindName("BtnDeleteBind");
 
             lblStatus = (TextBlock)root.FindName("LblStatus");
             prgBar = (ProgressBar)root.FindName("PrgBar");
@@ -212,6 +216,11 @@ namespace FaceitDemoManager
 
             // Reset binds button
             btnResetBinds.Click += BtnResetBinds_Click;
+            btnAddBind.Click += BtnAddBind_Click;
+            btnDeleteBind.Click += BtnDeleteBind_Click;
+            dgvBinds.CellEditEnding += (s, e) => {
+                Dispatcher.BeginInvoke(new Action(() => SaveConfig()), System.Windows.Threading.DispatcherPriority.Background);
+            };
 
             // Library search & list selection
             txtSearch.TextChanged += (s, e) => RefreshDemoList();
