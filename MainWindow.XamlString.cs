@@ -680,7 +680,7 @@ namespace FaceitDemoManager
                                 </Border>
                                 
                                 <!-- Bottom Stats Editor row -->
-                                <StackPanel Grid.Row=""2"">
+                                <StackPanel Grid.Row=""3"">
                                     <TextBlock Text=""РЕДАКТИРОВАНИЕ МАТЧА (выберите матч в таблице для редактирования)"" Foreground=""#71717a"" FontSize=""10"" FontWeight=""Bold"" Margin=""0,0,0,4""/>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
