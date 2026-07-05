@@ -1,0 +1,8 @@
+*.exe
+!zstd.exe
+*.log
+crash_log.txt
+config.txt
+bin/
+obj/
+.vs/
