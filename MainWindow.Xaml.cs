@@ -220,11 +220,27 @@ namespace FaceitDemoManager
                 RefreshDemoList();
             };
 
-            // Nickname contextual text edit
-            txtNickname.TextChanged += (s, e) => HandleNicknameChange(txtNickname.Text.Trim());
+            // Nickname text edits
+            txtNickname.TextChanged += (s, e) => {
+                if (isUpdatingNickname || settings == null) return;
+                settings.Nickname = txtNickname.Text.Trim();
+                ConfigManager.Save(configPath, settings);
+            };
             if (txtSidebarNick != null)
             {
-                txtSidebarNick.TextChanged += (s, e) => HandleNicknameChange(txtSidebarNick.Text.Trim());
+                txtSidebarNick.TextChanged += (s, e) => {
+                    if (isUpdatingNickname || settings == null) return;
+                    string selectedFolder = lstFolders != null && lstFolders.SelectedItem != null ? lstFolders.SelectedItem.ToString() : null;
+                    if (!string.IsNullOrEmpty(selectedFolder) && selectedFolder != "[Все демки]")
+                    {
+                        if (settings.FolderNicknames == null)
+                        {
+                            settings.FolderNicknames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                        }
+                        settings.FolderNicknames[selectedFolder] = txtSidebarNick.Text.Trim();
+                        ConfigManager.Save(configPath, settings);
+                    }
+                };
             }
 
             btnNewCategory.Click += BtnNewCategory_Click;
@@ -323,59 +339,43 @@ namespace FaceitDemoManager
         private bool isUpdatingNickname = false;
         private void UpdateNicknameInput()
         {
-            if (txtNickname == null || settings == null) return;
+            if (settings == null) return;
             
             isUpdatingNickname = true;
             string selectedFolder = lstFolders != null && lstFolders.SelectedItem != null ? lstFolders.SelectedItem.ToString() : null;
             
-            string currentNick = "";
-            if (string.IsNullOrEmpty(selectedFolder) || selectedFolder == "[Все демки]")
+            if (string.IsNullOrEmpty(selectedFolder) || selectedFolder == "[Все devки]" || selectedFolder == "[Все демки]")
             {
-                currentNick = settings.Nickname;
-                if (lblSidebarNick != null) lblSidebarNick.Text = "Никнейм по умолчанию:";
+                if (lblSidebarNick != null) lblSidebarNick.Visibility = Visibility.Collapsed;
+                if (txtSidebarNick != null)
+                {
+                    txtSidebarNick.Visibility = Visibility.Collapsed;
+                    txtSidebarNick.Text = "";
+                }
             }
             else
             {
-                if (settings.FolderNicknames != null && settings.FolderNicknames.TryGetValue(selectedFolder, out currentNick))
+                string folderNick = "";
+                if (settings.FolderNicknames != null && settings.FolderNicknames.TryGetValue(selectedFolder, out folderNick))
                 {
                     // Found
                 }
                 else
                 {
-                    currentNick = "";
+                    folderNick = "";
                 }
-                if (lblSidebarNick != null) lblSidebarNick.Text = string.Format("Никнейм для '{0}':", selectedFolder);
-            }
-            
-            txtNickname.Text = currentNick;
-            if (txtSidebarNick != null) txtSidebarNick.Text = currentNick;
-            
-            isUpdatingNickname = false;
-        }
-
-        private void HandleNicknameChange(string newNick)
-        {
-            if (isUpdatingNickname || settings == null) return;
-            isUpdatingNickname = true;
-            
-            string selectedFolder = lstFolders != null && lstFolders.SelectedItem != null ? lstFolders.SelectedItem.ToString() : null;
-            if (string.IsNullOrEmpty(selectedFolder) || selectedFolder == "[Все демки]")
-            {
-                settings.Nickname = newNick;
-            }
-            else
-            {
-                if (settings.FolderNicknames == null)
+                
+                if (lblSidebarNick != null)
                 {
-                    settings.FolderNicknames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    lblSidebarNick.Visibility = Visibility.Visible;
+                    lblSidebarNick.Text = string.Format("Никнейм для '{0}':", selectedFolder);
                 }
-                settings.FolderNicknames[selectedFolder] = newNick;
+                if (txtSidebarNick != null)
+                {
+                    txtSidebarNick.Visibility = Visibility.Visible;
+                    txtSidebarNick.Text = folderNick;
+                }
             }
-            
-            if (txtNickname != null && txtNickname.Text != newNick) txtNickname.Text = newNick;
-            if (txtSidebarNick != null && txtSidebarNick.Text != newNick) txtSidebarNick.Text = newNick;
-            
-            ConfigManager.Save(configPath, settings);
             
             isUpdatingNickname = false;
         }
@@ -429,6 +429,7 @@ namespace FaceitDemoManager
 
             txtDownloads.Text = settings.DownloadsPath;
             txtCS2.Text = settings.CS2Path;
+            if (txtNickname != null) txtNickname.Text = settings.Nickname;
             
             UpdateNicknameInput();
             
@@ -463,19 +464,19 @@ namespace FaceitDemoManager
 
             settings.DownloadsPath = txtDownloads.Text.Trim();
             settings.CS2Path = txtCS2.Text.Trim();
+            settings.Nickname = txtNickname.Text.Trim();
             
             string selectedFolder = lstFolders != null && lstFolders.SelectedItem != null ? lstFolders.SelectedItem.ToString() : null;
-            if (string.IsNullOrEmpty(selectedFolder) || selectedFolder == "[Все демки]")
-            {
-                settings.Nickname = txtNickname.Text.Trim();
-            }
-            else
+            if (!string.IsNullOrEmpty(selectedFolder) && selectedFolder != "[Все демки]")
             {
                 if (settings.FolderNicknames == null)
                 {
                     settings.FolderNicknames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 }
-                settings.FolderNicknames[selectedFolder] = txtNickname.Text.Trim();
+                if (txtSidebarNick != null)
+                {
+                    settings.FolderNicknames[selectedFolder] = txtSidebarNick.Text.Trim();
+                }
             }
 
             settings.WatchFolder = ChkWatchFolder.IsChecked == true;
