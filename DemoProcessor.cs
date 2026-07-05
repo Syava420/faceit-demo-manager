@@ -34,7 +34,7 @@ namespace FaceitDemoManager
 
         public static DemoMetadata GetStatsFromApi(string matchId, string nickname, Action<string, bool> logCallback)
         {
-            DemoMetadata dm = new DemoMetadata() { Map = "Unknown", Score = "?-?", KD = "-", Date = DateTime.Now.ToString("yyyy-MM-dd"), Note = "" };
+            DemoMetadata dm = new DemoMetadata() { Map = "Unknown", Score = "?-?", KD = "-", Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), Note = "" };
             try
             {
                 using (System.Net.WebClient wc = new System.Net.WebClient())
@@ -47,7 +47,7 @@ namespace FaceitDemoManager
                     {
                         long timestamp = long.Parse(mDate.Groups[1].Value);
                         DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                        dm.Date = epoch.AddMilliseconds(timestamp).ToLocalTime().ToString("yyyy-MM-dd");
+                        dm.Date = epoch.AddMilliseconds(timestamp).ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
                     }
 
                     Match mMap = Regex.Match(json, @"""i1""\s*:\s*""([^""]+)""");
@@ -74,7 +74,7 @@ namespace FaceitDemoManager
                             Match mAssists = Regex.Match(block, @"""i7""\s*:\s*""(\d+)""");
                             Match mDeaths = Regex.Match(block, @"""i8""\s*:\s*""(\d+)""");
                             Match mKD = Regex.Match(block, @"""c2""\s*:\s*""([\d.]+)""");
-                            Match mADR = Regex.Match(block, @"""i14""\s*:\s*""([\d.]+)""");
+                            Match mADR = Regex.Match(block, @"""c10""\s*:\s*""([\d.]+)""");
 
                             if (mKills.Success && mDeaths.Success && mKD.Success)
                             {
@@ -153,52 +153,52 @@ namespace FaceitDemoManager
             string scriptDir = AppDomain.CurrentDomain.BaseDirectory;
             string zstdPath = Path.Combine(scriptDir, zstdExeName);
 
-            if (!File.Exists(zstdPath))
-            {
-                throw new Exception("Не найден архиватор zstd.exe в папке программы!");
-            }
-
             string baseDemosDir = Path.Combine(cs2Directory, "faceit_demos");
             string fileName = Path.GetFileName(zstPath);
+            bool isZst = zstPath.EndsWith(".zst", StringComparison.OrdinalIgnoreCase);
 
-            if (zstPath.EndsWith(".dem", StringComparison.OrdinalIgnoreCase))
+            string extractedPath = "";
+
+            if (isZst)
             {
-                string targetFolder = Path.Combine(baseDemosDir, targetCategory);
-                Directory.CreateDirectory(targetFolder);
-                string destPath = Path.Combine(targetFolder, fileName);
-                File.Copy(zstPath, destPath, true);
-                if (logCallback != null) logCallback("Скопирован файл: " + fileName, false);
-                return true;
-            }
-
-            string fileBaseName = Path.GetFileNameWithoutExtension(zstPath); // оставляет .dem
-            string extractedPath = Path.Combine(Path.GetDirectoryName(zstPath), fileBaseName);
-
-            if (logCallback != null) logCallback("Распаковка: " + fileName, false);
-            ProcessStartInfo psi = new ProcessStartInfo();
-            psi.FileName = zstdPath;
-            psi.Arguments = string.Format("-d \"{0}\" -o \"{1}\" --force", zstPath, extractedPath);
-            psi.UseShellExecute = false;
-            psi.CreateNoWindow = true;
-
-            using (Process p = Process.Start(psi))
-            {
-                p.WaitForExit();
-                if (p.ExitCode != 0)
+                if (!File.Exists(zstdPath))
                 {
-                    throw new Exception("zstd завершился с кодом ошибки " + p.ExitCode);
+                    throw new Exception("Не найден архиватор zstd.exe в папке программы!");
+                }
+                string fileBaseName = Path.GetFileNameWithoutExtension(zstPath); // оставляет .dem
+                extractedPath = Path.Combine(Path.GetDirectoryName(zstPath), fileBaseName);
+
+                if (logCallback != null) logCallback("Распаковка: " + fileName, false);
+                ProcessStartInfo psi = new ProcessStartInfo();
+                psi.FileName = zstdPath;
+                psi.Arguments = string.Format("-d \"{0}\" -o \"{1}\" --force", zstPath, extractedPath);
+                psi.UseShellExecute = false;
+                psi.CreateNoWindow = true;
+
+                using (Process p = Process.Start(psi))
+                {
+                    p.WaitForExit();
+                    if (p.ExitCode != 0)
+                    {
+                        throw new Exception("zstd завершился с кодом ошибки " + p.ExitCode);
+                    }
+                }
+
+                if (!File.Exists(extractedPath))
+                {
+                    throw new Exception("Распакованный файл не найден на диске!");
                 }
             }
-
-            if (!File.Exists(extractedPath))
+            else
             {
-                throw new Exception("Распакованный файл не найден на диске!");
+                extractedPath = zstPath;
             }
 
+            string fileBaseNameForRename = Path.GetFileName(extractedPath);
             string shortName = "faceit_latest";
             Match m = Regex.Match(fileName, @"(1-[a-f0-9]{8})-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}");
 
-            DemoMetadata dm = new DemoMetadata() { Map = "Unknown", Score = "?-?", KD = "-", Date = DateTime.Now.ToString("yyyy-MM-dd"), Note = "" };
+            DemoMetadata dm = new DemoMetadata() { Map = "Unknown", Score = "?-?", KD = "-", Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), Note = "" };
 
             if (m.Success)
             {
@@ -207,11 +207,11 @@ namespace FaceitDemoManager
                 
                 if (logCallback != null) logCallback("Запрос статистики с Faceit API...", false);
                 dm = GetStatsFromApi(matchId, nickname, logCallback);
-                shortName = string.Format("faceit_{0}_{1}_{2}_{3}", dm.Date, dm.Map.Replace(" ", ""), dm.Score, shortId);
+                shortName = string.Format("faceit_{0}_{1}_{2}_{3}", dm.Date.Substring(0, 10), dm.Map.Replace(" ", ""), dm.Score, shortId);
             }
             else
             {
-                shortName = "faceit_" + fileBaseName.Replace(".dem", "");
+                shortName = "faceit_" + Path.GetFileNameWithoutExtension(extractedPath);
             }
 
             string targetFolderFolder = Path.Combine(baseDemosDir, targetCategory);
@@ -228,9 +228,17 @@ namespace FaceitDemoManager
             string destPathLatest = Path.Combine(Path.Combine(baseDemosDir, "General"), "faceit.dem");
 
             if (File.Exists(destPathUnique)) File.Delete(destPathUnique);
+
             try
             {
-                File.Move(extractedPath, destPathUnique);
+                if (extractedPath.Equals(destPathUnique, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Already in target destination
+                }
+                else
+                {
+                    File.Move(extractedPath, destPathUnique);
+                }
             }
             catch (Exception ex)
             {
@@ -238,7 +246,10 @@ namespace FaceitDemoManager
                 try
                 {
                     File.Copy(extractedPath, destPathUnique, true);
-                    File.Delete(extractedPath);
+                    if (!isZst)
+                    {
+                        File.Delete(extractedPath);
+                    }
                 }
                 catch (Exception copyEx)
                 {
@@ -252,7 +263,10 @@ namespace FaceitDemoManager
             string relPath = destPathUnique.Substring(baseDemosDir.Length).TrimStart('\\', '/').Replace('\\', '/');
             SaveMetadataForDemo(baseDemosDir, db, relPath, dm);
 
-            File.Delete(zstPath);
+            if (isZst && File.Exists(zstPath))
+            {
+                File.Delete(zstPath);
+            }
 
             if (logCallback != null) logCallback("Успешно добавлен матч: " + cleanShortName, false);
             return true;
