@@ -108,6 +108,40 @@ namespace FaceitDemoManager
                             </Setter.Value>
                         </Setter>
                     </Style>
+                    <Style TargetType=""ScrollBar"">
+                        <Setter Property=""Width"" Value=""8""/>
+                        <Setter Property=""MinHeight"" Value=""10""/>
+                        <Setter Property=""Background"" Value=""Transparent""/>
+                        <Setter Property=""Template"">
+                            <Setter.Value>
+                                <ControlTemplate TargetType=""ScrollBar"">
+                                    <Grid x:Name=""Bg"" Background=""Transparent"">
+                                        <Track x:Name=""PART_Track"" IsDirectionReversed=""true"">
+                                            <Track.Thumb>
+                                                <Thumb x:Name=""PART_Thumb"" Background=""#3f3f46"">
+                                                    <Thumb.Template>
+                                                        <ControlTemplate TargetType=""Thumb"">
+                                                            <Border Background=""{TemplateBinding Background}"" CornerRadius=""4""/>
+                                                        </ControlTemplate>
+                                                    </Thumb.Template>
+                                                </Thumb>
+                                            </Track.Thumb>
+                                        </Track>
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property=""Orientation"" Value=""Horizontal"">
+                                            <Setter Property=""Width"" Value=""Auto""/>
+                                            <Setter Property=""Height"" Value=""8""/>
+                                            <Setter TargetName=""PART_Track"" Property=""IsDirectionReversed"" Value=""False""/>
+                                        </Trigger>
+                                        <Trigger Property=""IsMouseOver"" Value=""True"">
+                                            <Setter TargetName=""PART_Thumb"" Property=""Background"" Value=""#52525b""/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
                     <Style TargetType=""TextBox"">
                         <Setter Property=""Background"" Value=""#27272a""/>
                         <Setter Property=""Foreground"" Value=""White""/>
