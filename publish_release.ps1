@@ -28,9 +28,6 @@ if (-not $token) {
     exit 1
 }
 
-Write-Host "Resolved Token Length: $($token.Length)" -ForegroundColor Yellow
-Write-Host "Resolved Token Start: $($token.Substring(0, 4))" -ForegroundColor Yellow
-
 $owner = "Syava420"
 $repo = "faceit-demo-manager"
 $tag = "v1.5.0"
@@ -82,7 +79,8 @@ if ($releaseResponse -and $releaseResponse.id) {
     
     $createUri = "https://api.github.com/repos/$owner/$repo/releases"
     $tempFile = [System.IO.Path]::GetTempFileName()
-    [System.IO.File]::WriteAllText($tempFile, $releaseBody, [System.Text.Encoding]::UTF8)
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($tempFile, $releaseBody, $utf8NoBom)
     
     $createJson = curl.exe --ssl-no-revoke -s -X POST -H "Authorization: token $token" -H "Accept: application/vnd.github.v3+json" -H "Content-Type: application/json; charset=utf-8" -d "@$tempFile" $createUri
     
