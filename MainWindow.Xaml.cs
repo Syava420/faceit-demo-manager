@@ -223,8 +223,53 @@ namespace FaceitDemoManager
             // Nickname text edits
             txtNickname.TextChanged += (s, e) => {
                 if (isUpdatingNickname || settings == null) return;
-                settings.Nickname = txtNickname.Text.Trim();
+                isUpdatingNickname = true;
+                
+                string newNick = txtNickname.Text.Trim();
+                string importMode = "General";
+                if (CboImportMode != null && CboImportMode.SelectedItem != null)
+                {
+                    importMode = ((ComboBoxItem)CboImportMode.SelectedItem).Tag.ToString();
+                }
+                
+                if (importMode == "Specific" && CboImportFolder != null && CboImportFolder.SelectedItem != null)
+                {
+                    string targetFolder = CboImportFolder.SelectedItem.ToString();
+                    if (settings.FolderNicknames == null)
+                    {
+                        settings.FolderNicknames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    }
+                    settings.FolderNicknames[targetFolder] = newNick;
+                    
+                    // Sync sidebar if the same folder is selected there
+                    string selectedSidebarFolder = lstFolders != null && lstFolders.SelectedItem != null ? lstFolders.SelectedItem.ToString() : null;
+                    if (selectedSidebarFolder != null && selectedSidebarFolder.Equals(targetFolder, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (txtSidebarNick != null) txtSidebarNick.Text = newNick;
+                    }
+                }
+                else if (importMode == "General")
+                {
+                    if (settings.FolderNicknames == null)
+                    {
+                        settings.FolderNicknames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    }
+                    settings.FolderNicknames["General"] = newNick;
+                    
+                    // Sync sidebar if General is selected
+                    string selectedSidebarFolder = lstFolders != null && lstFolders.SelectedItem != null ? lstFolders.SelectedItem.ToString() : null;
+                    if (selectedSidebarFolder != null && selectedSidebarFolder.Equals("General", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (txtSidebarNick != null) txtSidebarNick.Text = newNick;
+                    }
+                }
+                else
+                {
+                    settings.Nickname = newNick;
+                }
+                
                 ConfigManager.Save(configPath, settings);
+                isUpdatingNickname = false;
             };
             if (txtSidebarNick != null)
             {
@@ -233,12 +278,35 @@ namespace FaceitDemoManager
                     string selectedFolder = lstFolders != null && lstFolders.SelectedItem != null ? lstFolders.SelectedItem.ToString() : null;
                     if (!string.IsNullOrEmpty(selectedFolder) && selectedFolder != "[Все демки]")
                     {
+                        string newNick = txtSidebarNick.Text.Trim();
                         if (settings.FolderNicknames == null)
                         {
                             settings.FolderNicknames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                         }
-                        settings.FolderNicknames[selectedFolder] = txtSidebarNick.Text.Trim();
+                        settings.FolderNicknames[selectedFolder] = newNick;
                         ConfigManager.Save(configPath, settings);
+                        
+                        // Sync settings textbox if the same folder is currently selected in the import tab
+                        isUpdatingNickname = true;
+                        string importMode = "General";
+                        if (CboImportMode != null && CboImportMode.SelectedItem != null)
+                        {
+                            importMode = ((ComboBoxItem)CboImportMode.SelectedItem).Tag.ToString();
+                        }
+                        
+                        if (importMode == "Specific" && CboImportFolder != null && CboImportFolder.SelectedItem != null)
+                        {
+                            string targetFolder = CboImportFolder.SelectedItem.ToString();
+                            if (targetFolder.Equals(selectedFolder, StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (txtNickname != null) txtNickname.Text = newNick;
+                            }
+                        }
+                        else if (importMode == "General" && selectedFolder.Equals("General", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (txtNickname != null) txtNickname.Text = newNick;
+                        }
+                        isUpdatingNickname = false;
                     }
                 };
             }
@@ -257,6 +325,7 @@ namespace FaceitDemoManager
             txtNoteEdit.TextChanged += EditField_TextChanged;
 
             CboImportMode.SelectionChanged += CboImportMode_SelectionChanged;
+            CboImportFolder.SelectionChanged += CboImportFolder_SelectionChanged;
 
             // Setup double-click in DataGrid to play demo
             dgvDemos.MouseDoubleClick += DgvDemos_MouseDoubleClick;
@@ -429,9 +498,6 @@ namespace FaceitDemoManager
 
             txtDownloads.Text = settings.DownloadsPath;
             txtCS2.Text = settings.CS2Path;
-            if (txtNickname != null) txtNickname.Text = settings.Nickname;
-            
-            UpdateNicknameInput();
             
             ChkWatchFolder.IsChecked = settings.WatchFolder;
             ChkTray.IsChecked = settings.MinimizeTray;
@@ -456,6 +522,9 @@ namespace FaceitDemoManager
             {
                 CboImportFolder.SelectedItem = settings.TargetImportFolder;
             }
+
+            UpdateImportNicknameDisplay();
+            UpdateNicknameInput();
         }
 
         private void SaveConfig()
@@ -464,7 +533,24 @@ namespace FaceitDemoManager
 
             settings.DownloadsPath = txtDownloads.Text.Trim();
             settings.CS2Path = txtCS2.Text.Trim();
-            settings.Nickname = txtNickname.Text.Trim();
+            
+            // Save global nickname ONLY if we are not editing specific folders
+            string importMode = CboImportMode != null && CboImportMode.SelectedItem != null ? ((ComboBoxItem)CboImportMode.SelectedItem).Tag.ToString() : "General";
+            if (importMode == "Ask")
+            {
+                settings.Nickname = txtNickname.Text.Trim();
+            }
+            else if (importMode == "Specific" && CboImportFolder != null && CboImportFolder.SelectedItem != null)
+            {
+                string targetFolder = CboImportFolder.SelectedItem.ToString();
+                if (settings.FolderNicknames == null) settings.FolderNicknames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                settings.FolderNicknames[targetFolder] = txtNickname.Text.Trim();
+            }
+            else if (importMode == "General")
+            {
+                if (settings.FolderNicknames == null) settings.FolderNicknames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                settings.FolderNicknames["General"] = txtNickname.Text.Trim();
+            }
             
             string selectedFolder = lstFolders != null && lstFolders.SelectedItem != null ? lstFolders.SelectedItem.ToString() : null;
             if (!string.IsNullOrEmpty(selectedFolder) && selectedFolder != "[Все демки]")
@@ -501,7 +587,56 @@ namespace FaceitDemoManager
                 string mode = selectedItem.Tag.ToString();
                 CboImportFolder.IsEnabled = (mode == "Specific");
             }
+            UpdateImportNicknameDisplay();
             SaveConfig();
+        }
+
+        private void CboImportFolder_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateImportNicknameDisplay();
+            SaveConfig();
+        }
+
+        private void UpdateImportNicknameDisplay()
+        {
+            if (CboImportMode == null || CboImportFolder == null || txtNickname == null || settings == null) return;
+
+            isUpdatingNickname = true;
+
+            var selectedItem = (ComboBoxItem)CboImportMode.SelectedItem;
+            string mode = selectedItem != null ? selectedItem.Tag.ToString() : "General";
+
+            if (mode == "Specific" && CboImportFolder.SelectedItem != null)
+            {
+                string targetFolder = CboImportFolder.SelectedItem.ToString();
+                string folderNick = "";
+                if (settings.FolderNicknames != null && settings.FolderNicknames.TryGetValue(targetFolder, out folderNick))
+                {
+                    txtNickname.Text = folderNick;
+                }
+                else
+                {
+                    txtNickname.Text = settings.Nickname;
+                }
+            }
+            else if (mode == "General")
+            {
+                string folderNick = "";
+                if (settings.FolderNicknames != null && settings.FolderNicknames.TryGetValue("General", out folderNick))
+                {
+                    txtNickname.Text = folderNick;
+                }
+                else
+                {
+                    txtNickname.Text = settings.Nickname;
+                }
+            }
+            else
+            {
+                txtNickname.Text = settings.Nickname;
+            }
+
+            isUpdatingNickname = false;
         }
 
         private void MainWindow_Closing(object sender, CancelEventArgs e)
