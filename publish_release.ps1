@@ -7,13 +7,16 @@ if (-not $token) {
         $gitPath = "git.exe"
     }
     
-    $remoteUrl = & $gitPath remote get-url origin 2>$null
-    if ($remoteUrl -match 'https://([^@]+)@github\.com') {
-        $credentials = $Matches[1]
-        if ($credentials -match ':') {
-            $token = $credentials.Split(':')[1]
-        } else {
-            $token = $credentials
+    $remoteUrlRaw = & $gitPath remote get-url origin 2>$null
+    if ($remoteUrlRaw) {
+        $remoteUrl = $remoteUrlRaw.Trim()
+        if ($remoteUrl -match 'https://([^@]+)@github\.com') {
+            $credentials = $Matches[1]
+            if ($credentials -match ':') {
+                $token = $credentials.Split(':')[1]
+            } else {
+                $token = $credentials
+            }
         }
     }
 }
