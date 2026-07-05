@@ -1,30 +1,35 @@
-# Attempt to resolve GitHub Token dynamically
-$token = $env:GITHUB_TOKEN
-if (-not $token) {
-    # Find relative git executable path
-    $gitPath = Join-Path $PSScriptRoot "..\git\cmd\git.exe"
-    if (-not (Test-Path $gitPath)) {
-        $gitPath = "git.exe"
-    }
-    
-    $remoteUrlRaw = & $gitPath remote get-url origin 2>$null
-    if ($remoteUrlRaw) {
-        $remoteUrl = $remoteUrlRaw.Trim()
-        if ($remoteUrl -match 'https://([^@]+)@github\.com') {
-            $credentials = $Matches[1]
-            if ($credentials -match ':') {
-                $token = $credentials.Split(':')[1]
-            } else {
-                $token = $credentials
-            }
+# Attempt to resolve GitHub Token dynamically from git remote first
+$token = $null
+$gitPath = Join-Path $PSScriptRoot "..\git\cmd\git.exe"
+if (-not (Test-Path $gitPath)) {
+    $gitPath = "git.exe"
+}
+
+$remoteUrlRaw = & $gitPath remote get-url origin 2>$null
+if ($remoteUrlRaw) {
+    $remoteUrl = $remoteUrlRaw.Trim()
+    if ($remoteUrl -match 'https://([^@]+)@github\.com') {
+        $credentials = $Matches[1]
+        if ($credentials -match ':') {
+            $token = $credentials.Split(':')[1]
+        } else {
+            $token = $credentials
         }
     }
 }
 
+# Fallback to environment variable if git remote didn't have it
 if (-not $token) {
-    Write-Error "GitHub Token not found. Please set GITHUB_TOKEN environment variable or check your git remote URL."
+    $token = $env:GITHUB_TOKEN
+}
+
+if (-not $token) {
+    Write-Error "GitHub Token not found. Please check your git remote URL or set GITHUB_TOKEN environment variable."
     exit 1
 }
+
+Write-Host "Resolved Token Length: $($token.Length)" -ForegroundColor Yellow
+Write-Host "Resolved Token Start: $($token.Substring(0, 4))" -ForegroundColor Yellow
 
 $owner = "Syava420"
 $repo = "faceit-demo-manager"
