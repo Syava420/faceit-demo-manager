@@ -346,6 +346,10 @@ namespace FaceitDemoManager
                                         <RowDefinition Height=""*""/>
                                         <RowDefinition Height=""10""/>
                                         <RowDefinition Height=""Auto""/>
+                                        <RowDefinition Height=""4""/>
+                                        <RowDefinition Height=""Auto""/>
+                                        <RowDefinition Height=""12""/>
+                                        <RowDefinition Height=""Auto""/>
                                     </Grid.RowDefinitions>
                                     
                                     <ListBox Name=""LstFolders"" Grid.Row=""0"" Background=""Transparent"" BorderThickness=""0"" ScrollViewer.HorizontalScrollBarVisibility=""Disabled"">
@@ -378,7 +382,10 @@ namespace FaceitDemoManager
                                         </ListBox.ItemContainerStyle>
                                     </ListBox>
                                     
-                                    <Grid Grid.Row=""2"">
+                                    <TextBlock Name=""LblSidebarNick"" Grid.Row=""2"" Text=""Никнейм для папки:"" Foreground=""#a1a1aa"" FontSize=""10"" FontWeight=""Bold"" Margin=""2,0,0,0""/>
+                                    <TextBox Name=""TxtSidebarNick"" Grid.Row=""4"" Height=""25"" VerticalContentAlignment=""Center""/>
+                                    
+                                    <Grid Grid.Row=""6"">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width=""*""/>
                                             <ColumnDefinition Width=""8""/>
