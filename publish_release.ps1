@@ -1,20 +1,28 @@
+# Attempt to resolve GitHub Token dynamically
 $token = $env:GITHUB_TOKEN
 if (-not $token) {
-    try {
-        $gitPath = "C:\Users\Neuron\.gemini\antigravity\scratch\git\cmd\git.exe"
-        if (-not (Test-Path $gitPath)) {
-            $gitPath = "git"
+    # Find relative git executable path
+    $gitPath = Join-Path $PSScriptRoot "..\git\cmd\git.exe"
+    if (-not (Test-Path $gitPath)) {
+        $gitPath = "git.exe"
+    }
+    
+    $remoteUrl = & $gitPath remote get-url origin 2>$null
+    if ($remoteUrl -match 'https://([^@]+)@github\.com') {
+        $credentials = $Matches[1]
+        if ($credentials -match ':') {
+            $token = $credentials.Split(':')[1]
+        } else {
+            $token = $credentials
         }
-        $remoteUrl = & $gitPath remote get-url origin 2>$null
-        if ($remoteUrl -match 'https://([^@]+)@github\.com') {
-            $token = $Matches[1]
-        }
-    } catch {}
+    }
 }
+
 if (-not $token) {
-    Write-Error "GitHub token not found! Please set GITHUB_TOKEN environment variable or configure git remote credentials."
+    Write-Error "GitHub Token not found. Please set GITHUB_TOKEN environment variable or check your git remote URL."
     exit 1
 }
+
 $owner = "Syava420"
 $repo = "faceit-demo-manager"
 $tag = "v1.5.0"
@@ -32,6 +40,11 @@ $body = @"
 * **Setup.exe** — удобный установщик приложения со встроенными зависимостями (включая zstd).
 * **FaceitDemoManager.exe** — портативная версия исполняемого файла (требуется наличие zstd.exe в той же папке).
 "@
+
+$headers = @{
+    "Authorization" = "token $token"
+    "Accept"        = "application/vnd.github.v3+json"
+}
 
 Write-Host "Checking if release $tag already exists via curl..." -ForegroundColor Cyan
 
@@ -60,7 +73,6 @@ if ($releaseResponse -and $releaseResponse.id) {
     } | ConvertTo-Json -Compress
     
     $createUri = "https://api.github.com/repos/$owner/$repo/releases"
-    # Write request body temporarily to file because passing long JSON containing quotes via command line arguments to curl on Windows is error-prone.
     $tempFile = [System.IO.Path]::GetTempFileName()
     [System.IO.File]::WriteAllText($tempFile, $releaseBody, [System.Text.Encoding]::UTF8)
     
@@ -93,6 +105,14 @@ function Upload-Asset($filePath, $fileName) {
         return
     }
     
+    # Check if asset already exists in release
+    $existingAsset = $releaseResponse.assets | Where-Object { $_.name -eq $fileName }
+    if ($existingAsset) {
+        Write-Host "Asset $fileName already exists. Deleting existing asset before re-upload..." -ForegroundColor Yellow
+        $deleteUri = "https://api.github.com/repos/$owner/$repo/releases/assets/$($existingAsset.id)"
+        curl.exe --ssl-no-revoke -s -X DELETE -H "Authorization: token $token" -H "Accept: application/vnd.github.v3+json" $deleteUri
+    }
+    
     $assetUri = "$uploadUrlBase?name=$fileName"
     Write-Host "Uploading $fileName..." -ForegroundColor Cyan
     
@@ -110,11 +130,8 @@ function Upload-Asset($filePath, $fileName) {
     
     $uploadResult = & $curlCmd $curlArgs
     Write-Host "Finished upload attempt for $fileName." -ForegroundColor Green
-    if ($uploadResult) {
-        Write-Host "Upload result detail: $uploadResult" -ForegroundColor Gray
-    }
 }
 
 # Upload assets
-Upload-Asset "C:\Users\Neuron\.gemini\antigravity\scratch\faceit-demo-manager\Setup.exe" "Setup.exe"
-Upload-Asset "C:\Users\Neuron\.gemini\antigravity\scratch\faceit-demo-manager\FaceitDemoManager.exe" "FaceitDemoManager.exe"
+Upload-Asset (Join-Path $PSScriptRoot "Setup.exe") "Setup.exe"
+Upload-Asset (Join-Path $PSScriptRoot "FaceitDemoManager.exe") "FaceitDemoManager.exe"
