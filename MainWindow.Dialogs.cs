@@ -115,7 +115,7 @@ namespace FaceitDemoManager
                         <RowDefinition Height='*'/>
                         <RowDefinition Height='Auto'/>
                     </Grid.RowDefinitions>
-                    <TextBlock Text='{PROMPT}' Name='Prompt' Foreground='#a1a1aa' FontSize='11' FontWeight='Bold' Margin='0,0,0,10'/>
+                    <TextBlock Name='Prompt' Foreground='#a1a1aa' FontSize='11' FontWeight='Bold' Margin='0,0,0,10'/>
                     <TextBox Name='Input' Grid.Row='1' Height='25' VerticalContentAlignment='Center'/>
                     <StackPanel Grid.Row='2' Orientation='Horizontal' HorizontalAlignment='Right' Margin='0,10,0,0'>
                         <Button Name='Ok' Content='OK' Style='{StaticResource PrimaryBtn}' Width='80' Height='28' Margin='0,0,8,0'/>
@@ -123,9 +123,11 @@ namespace FaceitDemoManager
                     </StackPanel>
                 </Grid>
             </Border>";
-            xaml = xaml.Replace("{PROMPT}", promptText);
             Border root = (Border)XamlReader.Parse(xaml);
             w.Content = root;
+
+            TextBlock lblPrompt = (TextBlock)root.FindName("Prompt");
+            if (lblPrompt != null) lblPrompt.Text = promptText;
 
             TextBox inputTxt = (TextBox)root.FindName("Input");
             Button btnOk = (Button)root.FindName("Ok");
@@ -164,7 +166,7 @@ namespace FaceitDemoManager
                         <RowDefinition Height='Auto'/>
                     </Grid.RowDefinitions>
                     
-                    <TextBlock Text='{TITLE}' Foreground='White' FontWeight='Bold' FontSize='13' Margin='0,0,0,12' TextWrapping='Wrap'/>
+                    <TextBlock Name='TitleText' Foreground='White' FontWeight='Bold' FontSize='13' Margin='0,0,0,12' TextWrapping='Wrap'/>
                     
                     <ListBox Name='LstFoldersSelect' Grid.Row='1' Background='#18181b' BorderBrush='#27272a' BorderThickness='1' Margin='0,0,0,12' Padding='5'>
                         <ListBox.ItemContainerStyle>
@@ -210,9 +212,11 @@ namespace FaceitDemoManager
                     </Grid>
                 </Grid>
             </Border>";
-            xaml = xaml.Replace("{TITLE}", titleText);
             Border root = (Border)XamlReader.Parse(xaml);
             w.Content = root;
+
+            TextBlock lblTitle = (TextBlock)root.FindName("TitleText");
+            if (lblTitle != null) lblTitle.Text = titleText;
 
             ListBox lstSelect = (ListBox)root.FindName("LstFoldersSelect");
             Button btnNew = (Button)root.FindName("BtnNewFolder");
@@ -291,17 +295,21 @@ namespace FaceitDemoManager
                         <RowDefinition Height='*'/>
                         <RowDefinition Height='Auto'/>
                     </Grid.RowDefinitions>
-                    <TextBlock Text='{TITLE}' Foreground='White' FontWeight='Bold' Margin='0,0,0,10'/>
-                    <TextBlock Text='{MESSAGE}' Grid.Row='1' Foreground='#a1a1aa' FontSize='11' TextWrapping='Wrap' Margin='0,0,0,15'/>
+                    <TextBlock Name='ConfirmTitle' Foreground='White' FontWeight='Bold' Margin='0,0,0,10'/>
+                    <TextBlock Name='ConfirmMessage' Grid.Row='1' Foreground='#a1a1aa' FontSize='11' TextWrapping='Wrap' Margin='0,0,0,15'/>
                     <StackPanel Grid.Row='2' Orientation='Horizontal' HorizontalAlignment='Right'>
                         <Button Name='Yes' Content='Да' Style='{StaticResource PrimaryBtn}' Width='80' Height='28' Margin='0,0,8,0'/>
                         <Button Name='No' Content='Нет' Width='80' Height='28'/>
                     </StackPanel>
                 </Grid>
             </Border>";
-            xaml = xaml.Replace("{TITLE}", title).Replace("{MESSAGE}", message);
             Border root = (Border)XamlReader.Parse(xaml);
             w.Content = root;
+
+            TextBlock lblTitle = (TextBlock)root.FindName("ConfirmTitle");
+            if (lblTitle != null) lblTitle.Text = title;
+            TextBlock lblMsg = (TextBlock)root.FindName("ConfirmMessage");
+            if (lblMsg != null) lblMsg.Text = message;
 
             Button btnYes = (Button)root.FindName("Yes");
             Button btnNo = (Button)root.FindName("No");
@@ -340,16 +348,20 @@ namespace FaceitDemoManager
                         <RowDefinition Height='*'/>
                         <RowDefinition Height='Auto'/>
                     </Grid.RowDefinitions>
-                    <TextBlock Text='{TITLE}' Foreground='White' FontWeight='Bold' Margin='0,0,0,10'/>
-                    <TextBlock Text='{MESSAGE}' Grid.Row='1' Foreground='#a1a1aa' FontSize='11' TextWrapping='Wrap' Margin='0,0,0,15'/>
+                    <TextBlock Name='MsgTitle' Foreground='White' FontWeight='Bold' Margin='0,0,0,10'/>
+                    <TextBlock Name='MsgMessage' Grid.Row='1' Foreground='#a1a1aa' FontSize='11' TextWrapping='Wrap' Margin='0,0,0,15'/>
                     <StackPanel Grid.Row='2' Orientation='Horizontal' HorizontalAlignment='Right'>
                         <Button Name='Ok' Content='OK' Style='{StaticResource " + btnStyle + @"}' Width='90' Height='28'/>
                     </StackPanel>
                 </Grid>
             </Border>";
-            xaml = xaml.Replace("{TITLE}", title).Replace("{MESSAGE}", message);
             Border root = (Border)XamlReader.Parse(xaml);
             w.Content = root;
+
+            TextBlock lblTitle = (TextBlock)root.FindName("MsgTitle");
+            if (lblTitle != null) lblTitle.Text = title;
+            TextBlock lblMsg = (TextBlock)root.FindName("MsgMessage");
+            if (lblMsg != null) lblMsg.Text = message;
 
             Button btnOk = (Button)root.FindName("Ok");
             btnOk.Click += (s, e) => { w.DialogResult = true; w.Close(); };
