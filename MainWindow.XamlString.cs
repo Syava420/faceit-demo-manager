@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 
 namespace FaceitDemoManager
@@ -478,26 +478,17 @@ namespace FaceitDemoManager
                                             <TextBlock Text=""НАСТРОЙКИ И ИМПОРТ"" Foreground=""#8b5cf6"" FontSize=""13"" FontWeight=""Bold"" Margin=""0,0,0,15""/>
                                             
                                             <TextBlock Text=""Папка загрузок (Downloads)"" Foreground=""#a1a1aa"" FontSize=""10"" FontWeight=""Bold"" Margin=""0,0,0,2""/>
-                                            <Grid Margin=""0,0,0,10"">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width=""*"" />
-                                                    <ColumnDefinition Width=""35"" />
-                                                </Grid.ColumnDefinitions>
+                                            <DockPanel LastChildFill=""True"" Margin=""0,0,0,10"">
+                                                <Button Name=""BtnBrowseDownloads"" DockPanel.Dock=""Right"" Content=""..."" Style=""{StaticResource ModernBtn}"" Height=""25"" Width=""35"" Margin=""5,0,0,0""/>
                                                 <TextBox Name=""TxtDownloads"" Height=""25"" VerticalContentAlignment=""Center""/>
-                                                <Button Name=""BtnBrowseDownloads"" Grid.Column=""1"" Content=""..."" Style=""{StaticResource ModernBtn}"" Height=""25"" Margin=""5,0,0,0""/>
-                                            </Grid>
+                                            </DockPanel>
                                             
                                             <TextBlock Text=""Путь к CS2 (game\csgo)"" Foreground=""#a1a1aa"" FontSize=""10"" FontWeight=""Bold"" Margin=""0,0,0,2""/>
-                                            <Grid Margin=""0,0,0,10"">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width=""*"" />
-                                                    <ColumnDefinition Width=""Auto"" />
-                                                    <ColumnDefinition Width=""35"" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBox Name=""TxtCS2"" Grid.Column=""0"" Height=""25"" VerticalContentAlignment=""Center""/>
-                                                <Button Name=""BtnAutoCS2"" Grid.Column=""1"" Content=""Авто-поиск"" Style=""{StaticResource ModernBtn}"" Height=""25"" Padding=""8,2"" Margin=""5,0,0,0""/>
-                                                <Button Name=""BtnBrowseCS2"" Grid.Column=""2"" Content=""..."" Style=""{StaticResource ModernBtn}"" Height=""25"" Margin=""5,0,0,0""/>
-                                            </Grid>
+                                            <DockPanel LastChildFill=""True"" Margin=""0,0,0,10"">
+                                                <Button Name=""BtnBrowseCS2"" DockPanel.Dock=""Right"" Content=""..."" Style=""{StaticResource ModernBtn}"" Height=""25"" Width=""35"" Margin=""5,0,0,0""/>
+                                                <Button Name=""BtnAutoCS2"" DockPanel.Dock=""Right"" Content=""Авто-поиск"" Style=""{StaticResource ModernBtn}"" Height=""25"" Padding=""8,2"" Margin=""5,0,0,0""/>
+                                                <TextBox Name=""TxtCS2"" Height=""25"" VerticalContentAlignment=""Center""/>
+                                            </DockPanel>
                                             
                                             <TextBlock Text=""Никнейм на Faceit (для парсинга K/D)"" Foreground=""#a1a1aa"" FontSize=""10"" FontWeight=""Bold"" Margin=""0,0,0,2""/>
                                             <TextBox Name=""TxtNickname"" Height=""25"" VerticalContentAlignment=""Center"" Margin=""0,0,0,15""/>
