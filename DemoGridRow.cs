@@ -15,6 +15,8 @@ namespace FaceitDemoManager
         public string ADR { get; set; } // e.g. "85.2" or "-"
         public string Date { get; set; } // Raw date
         public string DateFormatted { get; set; } // Formatted date & time
+        public DateTime ImportDate { get; set; } // Date added to folder
+        public string ImportDateFormatted { get; set; } // Formatted import date
         public string Folder { get; set; }
         public string Note { get; set; }
         public string FilePath { get; set; }

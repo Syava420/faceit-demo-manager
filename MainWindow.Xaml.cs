@@ -44,6 +44,8 @@ namespace FaceitDemoManager
         private ListBox lstFolders;
         private TextBox txtSearch;
         private DataGrid dgvDemos;
+        private WrapPanel pnlMapFilters;
+        private string selectedMapFilter = null;
         
         // Match Editing Fields
         private TextBox txtEditMap;
@@ -135,6 +137,7 @@ namespace FaceitDemoManager
             lstFolders = (ListBox)root.FindName("LstFolders");
             txtSearch = (TextBox)root.FindName("TxtSearch");
             dgvDemos = (DataGrid)root.FindName("DgvDemos");
+            pnlMapFilters = (WrapPanel)root.FindName("PnlMapFilters");
 
             txtEditMap = (TextBox)root.FindName("TxtEditMap");
             txtEditScore = (TextBox)root.FindName("TxtEditScore");
@@ -228,6 +231,7 @@ namespace FaceitDemoManager
             // Setup folder selection text updates contextually
             lstFolders.SelectionChanged += (s, e) => {
                 UpdateNicknameInput();
+                selectedMapFilter = null;
                 RefreshDemoList();
             };
 

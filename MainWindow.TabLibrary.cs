@@ -106,6 +106,35 @@ namespace FaceitDemoManager
                 }
             }
 
+            // Gather all unique maps present in current list of files
+            HashSet<string> uniqueMaps = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string file in demoFiles)
+            {
+                string fileName = Path.GetFileName(file);
+                if (fileName.Equals("faceit.dem", StringComparison.OrdinalIgnoreCase)) continue;
+                string relativePath = file.Substring(baseDir.Length).TrimStart('\\', '/').Replace('\\', '/');
+                DemoMetadata dm;
+                if (!metadataDb.TryGetValue(relativePath, out dm))
+                {
+                    dm = DemoProcessor.ParseMetadataFromFilename(fileName);
+                }
+                if (dm != null && !string.IsNullOrEmpty(dm.Map) && !dm.Map.Equals("Unknown", StringComparison.OrdinalIgnoreCase))
+                {
+                    uniqueMaps.Add(dm.Map);
+                }
+            }
+
+            // Dynamically rebuild map filter buttons
+            if (pnlMapFilters != null)
+            {
+                pnlMapFilters.Children.Clear();
+                pnlMapFilters.Children.Add(CreateMapFilterButton(null, selectedMapFilter == null));
+                foreach (string map in uniqueMaps)
+                {
+                    pnlMapFilters.Children.Add(CreateMapFilterButton(map, string.Equals(selectedMapFilter, map, StringComparison.OrdinalIgnoreCase)));
+                }
+            }
+
             string filter = txtSearch.Text.Trim();
             List<DemoGridRow> gridList = new List<DemoGridRow>();
 
@@ -125,6 +154,7 @@ namespace FaceitDemoManager
                     dm = DemoProcessor.ParseMetadataFromFilename(fileName);
                 }
 
+                // Apply text filter
                 if (!string.IsNullOrEmpty(filter))
                 {
                     bool match = (dm.Map != null && dm.Map.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0) ||
@@ -132,6 +162,15 @@ namespace FaceitDemoManager
                                  (dm.Date != null && dm.Date.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0) ||
                                  (folderName.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0);
                     if (!match) continue;
+                }
+
+                // Apply map button filter
+                if (!string.IsNullOrEmpty(selectedMapFilter))
+                {
+                    if (!string.Equals(dm.Map, selectedMapFilter, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
                 }
 
                 // Win/Loss and Score
@@ -208,6 +247,15 @@ namespace FaceitDemoManager
                     dateTextFormatted = dtVal.ToString("ddd d MMM", new System.Globalization.CultureInfo("ru-RU")) + "\n" + dtVal.ToString("HH:mm");
                 }
 
+                // Import Date
+                DateTime importDt = DateTime.Now;
+                try
+                {
+                    importDt = File.GetCreationTime(file);
+                }
+                catch { }
+                string importDateFormatted = importDt.ToString("ddd d MMM", new System.Globalization.CultureInfo("ru-RU")) + "\n" + importDt.ToString("HH:mm");
+
                 gridList.Add(new DemoGridRow()
                 {
                     Check = false,
@@ -221,13 +269,53 @@ namespace FaceitDemoManager
                     ADR = adrText,
                     Date = dm.Date,
                     DateFormatted = dateTextFormatted,
+                    ImportDate = importDt,
+                    ImportDateFormatted = importDateFormatted,
                     Folder = folderName.Equals("General", StringComparison.OrdinalIgnoreCase) ? "Общая" : folderName,
                     Note = dm.Note,
                     FilePath = file
                 });
             }
 
+            // Sort by Import Date descending (most recently added demos at the top) by default
+            gridList.Sort((a, b) => b.ImportDate.CompareTo(a.ImportDate));
+
             dgvDemos.ItemsSource = gridList;
+        }
+
+        private Button CreateMapFilterButton(string mapName, bool isActive)
+        {
+            Button btn = new Button();
+            btn.Content = (mapName == null) ? "Все карты" : GetMapEmoji(mapName) + " " + mapName;
+            btn.Margin = new Thickness(0, 0, 8, 8);
+            btn.Height = 26;
+            btn.Padding = new Thickness(12, 0, 12, 0);
+            btn.Cursor = Cursors.Hand;
+            btn.FontWeight = FontWeights.SemiBold;
+            btn.FontSize = 10;
+            btn.Foreground = Brushes.White;
+
+            ControlTemplate template = new ControlTemplate(typeof(Button));
+            FrameworkElementFactory borderFactory = new FrameworkElementFactory(typeof(Border));
+            borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(13));
+            
+            string bgColor = isActive ? "#8b5cf6" : "#27272a";
+            borderFactory.SetValue(Border.BackgroundProperty, new SolidColorBrush((Color)ColorConverter.ConvertFromString(bgColor)));
+            borderFactory.SetValue(Border.BorderThicknessProperty, new Thickness(isActive ? 1 : 0));
+            borderFactory.SetValue(Border.BorderBrushProperty, new SolidColorBrush((Color)ColorConverter.ConvertFromString("#a78bfa")));
+            
+            FrameworkElementFactory presenter = new FrameworkElementFactory(typeof(ContentPresenter));
+            presenter.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+            presenter.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+            borderFactory.AppendChild(presenter);
+            template.VisualTree = borderFactory;
+            btn.Template = template;
+
+            btn.Click += (s, e) => {
+                selectedMapFilter = mapName;
+                RefreshDemoList();
+            };
+            return btn;
         }
 
         private string GetMapEmoji(string map)

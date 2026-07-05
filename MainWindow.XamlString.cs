@@ -527,6 +527,7 @@ namespace FaceitDemoManager
                             <Grid Name=""GridLibraryTab"" Margin=""20"" Visibility=""Collapsed"">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height=""40""/>
+                                    <RowDefinition Height=""Auto""/>
                                     <RowDefinition Height=""*""/>
                                     <RowDefinition Height=""Auto""/>
                                 </Grid.RowDefinitions>
@@ -550,9 +551,13 @@ namespace FaceitDemoManager
                                         <Button Name=""BtnDeleteDemo"" Content=""🗑️ Удалить"" Style=""{StaticResource RedBtn}"" Width=""90"" Height=""30""/>
                                     </StackPanel>
                                 </Grid>
+
+                                <!-- Map Filters WrapPanel -->
+                                <WrapPanel Grid.Row=""1"" Name=""PnlMapFilters"" Margin=""0,0,0,10"" VerticalAlignment=""Center"">
+                                </WrapPanel>
                                 
                                 <!-- Matches DataGrid -->
-                                <Border Grid.Row=""1"" Background=""#18181b"" CornerRadius=""12"" BorderThickness=""1"" BorderBrush=""#27272a"" Padding=""5"" Margin=""0,0,0,12"">
+                                <Border Grid.Row=""2"" Background=""#18181b"" CornerRadius=""12"" BorderThickness=""1"" BorderBrush=""#27272a"" Padding=""5"" Margin=""0,0,0,12"">
                                     <DataGrid Name=""DgvDemos"" AutoGenerateColumns=""False"" HeadersVisibility=""Column"" SelectionMode=""Extended"">
                                         <DataGrid.Columns>
                                             <!-- Результат / Счет -->
@@ -642,11 +647,20 @@ namespace FaceitDemoManager
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
 
-                                            <!-- Дата и время -->
+                                            <!-- Дата игры -->
                                             <DataGridTemplateColumn Header=""Дата игры"" Width=""95"" IsReadOnly=""True"">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <TextBlock Text=""{Binding DateFormatted}"" Foreground=""#a1a1aa"" FontSize=""10"" VerticalAlignment=""Center"" Margin=""5,0,0,0"" LineHeight=""14""/>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+
+                                            <!-- Дата добавления -->
+                                            <DataGridTemplateColumn Header=""Добавлено"" Width=""95"" IsReadOnly=""True"">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text=""{Binding ImportDateFormatted}"" Foreground=""#8b5cf6"" FontSize=""10"" VerticalAlignment=""Center"" Margin=""5,0,0,0"" LineHeight=""14""/>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
