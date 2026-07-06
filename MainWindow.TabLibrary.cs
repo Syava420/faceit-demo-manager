@@ -77,239 +77,269 @@ namespace FaceitDemoManager
             }
         }
 
+        private int currentLoadId = 0;
+
         private void RefreshDemoList()
         {
             if (dgvDemos == null) return;
-            dgvDemos.ItemsSource = null;
 
             string selectedFolder = lstFolders.SelectedItem != null ? lstFolders.SelectedItem.ToString() : null;
-            if (selectedFolder == null) return;
+            if (selectedFolder == null)
+            {
+                dgvDemos.ItemsSource = null;
+                return;
+            }
 
             if (selectedFolder == "[Все демки]") selectedFolder = "[All Demos]";
 
             string baseDir = GetDemosBaseDir();
-            if (!Directory.Exists(baseDir)) return;
-
-            DemoProcessor.LoadMetadataDb(baseDir, metadataDb);
-
-            List<string> demoFiles = new List<string>();
-            if (selectedFolder == "[All Demos]")
+            if (!Directory.Exists(baseDir))
             {
-                demoFiles.AddRange(Directory.GetFiles(baseDir, "*.dem", SearchOption.AllDirectories));
-            }
-            else
-            {
-                string targetDir = Path.Combine(baseDir, selectedFolder);
-                if (Directory.Exists(targetDir))
-                {
-                    demoFiles.AddRange(Directory.GetFiles(targetDir, "*.dem"));
-                }
-            }
-
-            // Gather all unique maps present in current list of files
-            HashSet<string> uniqueMaps = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (string file in demoFiles)
-            {
-                string fileName = Path.GetFileName(file);
-                if (fileName.Equals("faceit.dem", StringComparison.OrdinalIgnoreCase)) continue;
-                string relativePath = file.Substring(baseDir.Length).TrimStart('\\', '/').Replace('\\', '/');
-                DemoMetadata dm;
-                if (!metadataDb.TryGetValue(relativePath, out dm))
-                {
-                    dm = DemoProcessor.ParseMetadataFromFilename(fileName);
-                }
-                if (dm != null && !string.IsNullOrEmpty(dm.Map) && !dm.Map.Equals("Unknown", StringComparison.OrdinalIgnoreCase))
-                {
-                    uniqueMaps.Add(dm.Map);
-                }
-            }
-
-            // Dynamically rebuild map filter buttons
-            if (pnlMapFilters != null)
-            {
-                pnlMapFilters.Children.Clear();
-                pnlMapFilters.Children.Add(CreateMapFilterButton(null, selectedMapFilter == null));
-                foreach (string map in uniqueMaps)
-                {
-                    pnlMapFilters.Children.Add(CreateMapFilterButton(map, string.Equals(selectedMapFilter, map, StringComparison.OrdinalIgnoreCase)));
-                }
+                dgvDemos.ItemsSource = null;
+                return;
             }
 
             string filter = txtSearch.Text.Trim();
-            List<DemoGridRow> gridList = new List<DemoGridRow>();
+            string mapFilter = selectedMapFilter;
+            int loadId = ++currentLoadId;
 
-            foreach (string file in demoFiles)
+            if (lblStatus != null)
             {
-                string fileName = Path.GetFileName(file);
-                if (fileName.Equals("faceit.dem", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue; // Skip layout demo
-                }
-                string relativePath = file.Substring(baseDir.Length).TrimStart('\\', '/').Replace('\\', '/');
-                string folderName = Path.GetFileName(Path.GetDirectoryName(file));
-
-                DemoMetadata dm = null;
-                if (!metadataDb.TryGetValue(relativePath, out dm))
-                {
-                    dm = DemoProcessor.ParseMetadataFromFilename(fileName);
-                }
-
-                // Apply text filter
-                if (!string.IsNullOrEmpty(filter))
-                {
-                    bool match = (dm.Map != null && dm.Map.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0) ||
-                                 (dm.Note != null && dm.Note.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0) ||
-                                 (dm.Date != null && dm.Date.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0) ||
-                                 (folderName.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0);
-                    if (!match) continue;
-                }
-
-                // Apply map button filter
-                if (!string.IsNullOrEmpty(selectedMapFilter))
-                {
-                    if (!string.Equals(dm.Map, selectedMapFilter, StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-                }
-
-                // Win/Loss and Score
-                bool isWin = false;
-                string scoreText = dm.Score;
-                if (!string.IsNullOrEmpty(dm.Score))
-                {
-                    string[] parts = dm.Score.Split('-');
-                    if (parts.Length == 2)
-                    {
-                        int s1, s2;
-                        if (int.TryParse(parts[0].Trim(), out s1) && int.TryParse(parts[1].Trim(), out s2))
-                        {
-                            if (s1 > s2)
-                            {
-                                isWin = true;
-                                scoreText = "W " + s1 + " : " + s2;
-                            }
-                            else
-                            {
-                                isWin = false;
-                                scoreText = "L " + s1 + " : " + s2;
-                            }
-                        }
-                    }
-                }
-
-                // Stats: K/D/A and ADR
-                string kdaText = "-";
-                string kdRatioText = "-";
-                string kdStatusText = "Normal";
-                string adrText = "-";
-
-                if (!string.IsNullOrEmpty(dm.KD) && dm.KD != "-")
-                {
-                    Match mRatio = Regex.Match(dm.KD, @"^([\d.]+)");
-                    if (mRatio.Success)
-                    {
-                        kdRatioText = mRatio.Groups[1].Value;
-                        double ratioVal;
-                        if (double.TryParse(kdRatioText, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out ratioVal))
-                        {
-                            kdStatusText = ratioVal >= 1.0 ? "High" : "Low";
-                        }
-                    }
-
-                    Match mKda = Regex.Match(dm.KD, @"\(([^()]+)\)");
-                    if (mKda.Success)
-                    {
-                        string kdaRaw = mKda.Groups[1].Value;
-                        string[] kparts = kdaRaw.Split('/');
-                        if (kparts.Length == 3)
-                        {
-                            kdaText = string.Format("{0} / {1} / {2}", kparts[0], kparts[1], kparts[2]);
-                        }
-                        else if (kparts.Length == 2)
-                        {
-                            kdaText = string.Format("{0} / {1} / -", kparts[0], kparts[1]);
-                        }
-                    }
-
-                    Match mAdrVal = Regex.Match(dm.KD, @"\[([^[\]]+)\]");
-                    if (mAdrVal.Success)
-                    {
-                        adrText = mAdrVal.Groups[1].Value;
-                    }
-                }
-
-                // Date
-                string dateTextFormatted = dm.Date;
-                DateTime dtVal;
-                if (DateTime.TryParse(dm.Date, out dtVal))
-                {
-                    dateTextFormatted = dtVal.ToString("ddd d MMM", new System.Globalization.CultureInfo("ru-RU")) + "\n" + dtVal.ToString("HH:mm");
-                }
-
-                // Import Date
-                DateTime importDt = DateTime.Now;
-                try
-                {
-                    importDt = File.GetCreationTime(file);
-                }
-                catch { }
-                string importDateFormatted = importDt.ToString("ddd d MMM", new System.Globalization.CultureInfo("ru-RU")) + "\n" + importDt.ToString("HH:mm");
-
-                gridList.Add(new DemoGridRow()
-                {
-                    Check = false,
-                    Map = GetMapEmoji(dm.Map) + " " + dm.Map,
-                    Score = dm.Score,
-                    ScoreText = scoreText,
-                    IsWin = isWin,
-                    KDA = kdaText,
-                    KDRatio = kdRatioText,
-                    KDStatus = kdStatusText,
-                    ADR = adrText,
-                    Date = dm.Date,
-                    DateFormatted = dateTextFormatted,
-                    ImportDate = importDt,
-                    ImportDateFormatted = importDateFormatted,
-                    Folder = folderName.Equals("General", StringComparison.OrdinalIgnoreCase) ? "Общая" : folderName,
-                    Note = dm.Note,
-                    FilePath = file
-                });
+                lblStatus.Text = "Загрузка матчей...";
             }
 
-            // Sort by Import Date descending (most recently added demos at the top) by default
-            gridList.Sort((a, b) => b.ImportDate.CompareTo(a.ImportDate));
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    var localDb = new Dictionary<string, DemoMetadata>(StringComparer.OrdinalIgnoreCase);
+                    DemoProcessor.LoadMetadataDb(baseDir, localDb);
 
-            dgvDemos.ItemsSource = gridList;
+                    List<string> demoFiles = new List<string>();
+                    if (selectedFolder == "[All Demos]")
+                    {
+                        demoFiles.AddRange(Directory.GetFiles(baseDir, "*.dem", SearchOption.AllDirectories));
+                    }
+                    else
+                    {
+                        string targetDir = Path.Combine(baseDir, selectedFolder);
+                        if (Directory.Exists(targetDir))
+                        {
+                            demoFiles.AddRange(Directory.GetFiles(targetDir, "*.dem"));
+                        }
+                    }
+
+                    // Gather all unique maps present in current list of files
+                    HashSet<string> uniqueMaps = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    foreach (string file in demoFiles)
+                    {
+                        string fileName = Path.GetFileName(file);
+                        if (fileName.Equals("faceit.dem", StringComparison.OrdinalIgnoreCase)) continue;
+                        string relativePath = file.Substring(baseDir.Length).TrimStart('\\', '/').Replace('\\', '/');
+                        DemoMetadata dm;
+                        if (!localDb.TryGetValue(relativePath, out dm))
+                        {
+                            dm = DemoProcessor.ParseMetadataFromFilename(fileName);
+                        }
+                        if (dm != null && !string.IsNullOrEmpty(dm.Map) && !dm.Map.Equals("Unknown", StringComparison.OrdinalIgnoreCase))
+                        {
+                            uniqueMaps.Add(dm.Map);
+                        }
+                    }
+
+                    List<DemoGridRow> gridList = new List<DemoGridRow>();
+                    foreach (string file in demoFiles)
+                    {
+                        string fileName = Path.GetFileName(file);
+                        if (fileName.Equals("faceit.dem", StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue; // Skip layout demo
+                        }
+                        string relativePath = file.Substring(baseDir.Length).TrimStart('\\', '/').Replace('\\', '/');
+                        string folderName = Path.GetFileName(Path.GetDirectoryName(file));
+
+                        DemoMetadata dm = null;
+                        if (!localDb.TryGetValue(relativePath, out dm))
+                        {
+                            dm = DemoProcessor.ParseMetadataFromFilename(fileName);
+                        }
+
+                        // Apply text filter
+                        if (!string.IsNullOrEmpty(filter))
+                        {
+                            bool match = (dm.Map != null && dm.Map.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                                         (dm.Note != null && dm.Note.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                                         (dm.Date != null && dm.Date.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                                         (folderName.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0);
+                            if (!match) continue;
+                        }
+
+                        // Apply map button filter
+                        if (!string.IsNullOrEmpty(mapFilter))
+                        {
+                            if (!string.Equals(dm.Map, mapFilter, StringComparison.OrdinalIgnoreCase))
+                            {
+                                continue;
+                            }
+                        }
+
+                        // Win/Loss and Score
+                        bool isWin = false;
+                        string scoreText = dm.Score;
+                        if (!string.IsNullOrEmpty(dm.Score))
+                        {
+                            string[] parts = dm.Score.Split('-');
+                            if (parts.Length == 2)
+                            {
+                                int s1, s2;
+                                if (int.TryParse(parts[0].Trim(), out s1) && int.TryParse(parts[1].Trim(), out s2))
+                                {
+                                    if (s1 > s2)
+                                    {
+                                        isWin = true;
+                                        scoreText = "W " + s1 + " : " + s2;
+                                    }
+                                    else
+                                    {
+                                        isWin = false;
+                                        scoreText = "L " + s1 + " : " + s2;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Stats: K/D/A and ADR
+                        string kdaText = "-";
+                        string kdRatioText = "-";
+                        string kdStatusText = "Normal";
+                        string adrText = "-";
+
+                        if (!string.IsNullOrEmpty(dm.KD) && dm.KD != "-")
+                        {
+                            Match mRatio = Regex.Match(dm.KD, @"^([\d.]+)");
+                            if (mRatio.Success)
+                            {
+                                kdRatioText = mRatio.Groups[1].Value;
+                                double ratioVal;
+                                if (double.TryParse(kdRatioText, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out ratioVal))
+                                {
+                                    kdStatusText = ratioVal >= 1.0 ? "High" : "Low";
+                                }
+                            }
+
+                            Match mKda = Regex.Match(dm.KD, @"\(([^()]+)\)");
+                            if (mKda.Success)
+                            {
+                                string kdaRaw = mKda.Groups[1].Value;
+                                string[] kparts = kdaRaw.Split('/');
+                                if (kparts.Length == 3)
+                                {
+                                    kdaText = string.Format("{0} / {1} / {2}", kparts[0], kparts[1], kparts[2]);
+                                }
+                                else if (kparts.Length == 2)
+                                {
+                                    kdaText = string.Format("{0} / {1} / -", kparts[0], kparts[1]);
+                                }
+                            }
+
+                            Match mAdrVal = Regex.Match(dm.KD, @"\[([^[\]]+)\]");
+                            if (mAdrVal.Success)
+                            {
+                                adrText = mAdrVal.Groups[1].Value;
+                            }
+                        }
+
+                        // Date
+                        string dateTextFormatted = dm.Date;
+                        DateTime dtVal;
+                        if (DateTime.TryParse(dm.Date, out dtVal))
+                        {
+                            dateTextFormatted = dtVal.ToString("ddd d MMM", new System.Globalization.CultureInfo("ru-RU")) + "\n" + dtVal.ToString("HH:mm");
+                        }
+
+                        // Import Date
+                        DateTime importDt = DateTime.Now;
+                        try
+                        {
+                            importDt = File.GetCreationTime(file);
+                        }
+                        catch { }
+                        string importDateFormatted = importDt.ToString("ddd d MMM", new System.Globalization.CultureInfo("ru-RU")) + "\n" + importDt.ToString("HH:mm");
+
+                        gridList.Add(new DemoGridRow()
+                        {
+                            Check = false,
+                            Map = GetMapEmoji(dm.Map) + " " + dm.Map,
+                            Score = dm.Score,
+                            ScoreText = scoreText,
+                            IsWin = isWin,
+                            KDA = kdaText,
+                            KDRatio = kdRatioText,
+                            KDStatus = kdStatusText,
+                            ADR = adrText,
+                            Date = dm.Date,
+                            DateFormatted = dateTextFormatted,
+                            ImportDate = importDt,
+                            ImportDateFormatted = importDateFormatted,
+                            Folder = folderName.Equals("General", StringComparison.OrdinalIgnoreCase) ? "Общая" : folderName,
+                            Note = dm.Note,
+                            FilePath = file
+                        });
+                    }
+
+                    // Sort by Import Date descending (most recently added demos at the top) by default
+                    gridList.Sort((a, b) => b.ImportDate.CompareTo(a.ImportDate));
+
+                    this.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        // Ensure we discard out-of-order updates
+                        if (loadId != currentLoadId) return;
+
+                        this.metadataDb = localDb;
+                        dgvDemos.ItemsSource = gridList;
+
+                        // Dynamically rebuild map filter buttons
+                        if (pnlMapFilters != null)
+                        {
+                            pnlMapFilters.Children.Clear();
+                            pnlMapFilters.Children.Add(CreateMapFilterButton(null, mapFilter == null));
+                            foreach (string map in uniqueMaps)
+                            {
+                                pnlMapFilters.Children.Add(CreateMapFilterButton(map, string.Equals(mapFilter, map, StringComparison.OrdinalIgnoreCase)));
+                            }
+                        }
+
+                        if (lblStatus != null)
+                        {
+                            lblStatus.Text = "Готов к работе";
+                        }
+                    }));
+                }
+                catch (Exception ex)
+                {
+                    this.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        if (loadId != currentLoadId) return;
+                        if (lblStatus != null)
+                        {
+                            lblStatus.Text = "Ошибка загрузки списка: " + ex.Message;
+                        }
+                    }));
+                }
+            });
         }
 
         private Button CreateMapFilterButton(string mapName, bool isActive)
         {
             Button btn = new Button();
             btn.Content = (mapName == null) ? "Все карты" : GetMapEmoji(mapName) + " " + mapName;
-            btn.Margin = new Thickness(0, 0, 8, 8);
-            btn.Height = 26;
-            btn.Padding = new Thickness(12, 0, 12, 0);
-            btn.Cursor = Cursors.Hand;
-            btn.FontWeight = FontWeights.SemiBold;
-            btn.FontSize = 10;
-            btn.Foreground = Brushes.White;
-
-            ControlTemplate template = new ControlTemplate(typeof(Button));
-            FrameworkElementFactory borderFactory = new FrameworkElementFactory(typeof(Border));
-            borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(13));
             
-            string bgColor = isActive ? "#8b5cf6" : "#27272a";
-            borderFactory.SetValue(Border.BackgroundProperty, new SolidColorBrush((Color)ColorConverter.ConvertFromString(bgColor)));
-            borderFactory.SetValue(Border.BorderThicknessProperty, new Thickness(isActive ? 1 : 0));
-            borderFactory.SetValue(Border.BorderBrushProperty, new SolidColorBrush((Color)ColorConverter.ConvertFromString("#a78bfa")));
-            
-            FrameworkElementFactory presenter = new FrameworkElementFactory(typeof(ContentPresenter));
-            presenter.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
-            presenter.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
-            borderFactory.AppendChild(presenter);
-            template.VisualTree = borderFactory;
-            btn.Template = template;
+            // Resolve XAML style for modern hover states and aesthetics
+            Style style = (Style)this.FindResource(isActive ? "MapFilterBtnActiveStyle" : "MapFilterBtnStyle");
+            if (style != null)
+            {
+                btn.Style = style;
+            }
 
             btn.Click += (s, e) => {
                 selectedMapFilter = mapName;

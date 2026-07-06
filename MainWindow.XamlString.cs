@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 
 namespace FaceitDemoManager
@@ -12,7 +12,7 @@ namespace FaceitDemoManager
                     CornerRadius=""12"" Background=""#121214"" BorderBrush=""#2e2e34"" BorderThickness=""1"">
                 <Border.Resources>
                     <Style x:Key=""ModernBtn"" TargetType=""Button"">
-                        <Setter Property=""Background"" Value=""#8b5cf6""/>
+                        <Setter Property=""Background"" Value=""#7c3aed""/>
                         <Setter Property=""Foreground"" Value=""White""/>
                         <Setter Property=""FontWeight"" Value=""Bold""/>
                         <Setter Property=""Padding"" Value=""15,8""/>
@@ -21,16 +21,19 @@ namespace FaceitDemoManager
                         <Setter Property=""Template"">
                             <Setter.Value>
                                 <ControlTemplate TargetType=""Button"">
-                                    <Border x:Name=""border"" CornerRadius=""15"" Background=""{TemplateBinding Background}"">
+                                    <Border x:Name=""border"" CornerRadius=""8"" Background=""{TemplateBinding Background}"">
                                         <ContentPresenter HorizontalAlignment=""Center"" VerticalAlignment=""Center""/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property=""IsMouseOver"" Value=""True"">
-                                            <Setter TargetName=""border"" Property=""Background"" Value=""#a78bfa""/>
+                                            <Setter TargetName=""border"" Property=""Background"" Value=""#8b5cf6""/>
+                                        </Trigger>
+                                        <Trigger Property=""IsPressed"" Value=""True"">
+                                            <Setter TargetName=""border"" Property=""Background"" Value=""#6d28d9""/>
                                         </Trigger>
                                         <Trigger Property=""IsEnabled"" Value=""False"">
-                                            <Setter TargetName=""border"" Property=""Background"" Value=""#4b5563""/>
-                                            <Setter Property=""Foreground"" Value=""#9ca3af""/>
+                                            <Setter TargetName=""border"" Property=""Background"" Value=""#27272a""/>
+                                            <Setter Property=""Foreground"" Value=""#52525b""/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -60,13 +63,13 @@ namespace FaceitDemoManager
                                             <Setter TargetName=""border"" Property=""Background"" Value=""#27272a""/>
                                             <Setter Property=""Foreground"" Value=""White""/>
                                         </MultiDataTrigger>
-                                        <!-- Hover when active (Background is #8b5cf6) -->
+                                        <!-- Hover when active (Background is #7c3aed) -->
                                         <MultiDataTrigger>
                                             <MultiDataTrigger.Conditions>
                                                 <Condition Binding=""{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}"" Value=""True""/>
-                                                <Condition Binding=""{Binding RelativeSource={RelativeSource Self}, Path=Background}"" Value=""#8b5cf6""/>
+                                                <Condition Binding=""{Binding RelativeSource={RelativeSource Self}, Path=Background}"" Value=""#7c3aed""/>
                                             </MultiDataTrigger.Conditions>
-                                            <Setter TargetName=""border"" Property=""Background"" Value=""#a78bfa""/>
+                                            <Setter TargetName=""border"" Property=""Background"" Value=""#8b5cf6""/>
                                             <Setter Property=""Foreground"" Value=""White""/>
                                         </MultiDataTrigger>
                                     </ControlTemplate.Triggers>
@@ -74,34 +77,130 @@ namespace FaceitDemoManager
                             </Setter.Value>
                         </Setter>
                     </Style>
-                    <Style x:Key=""RedBtn"" TargetType=""Button"" BasedOn=""{StaticResource ModernBtn}"">
-                        <Setter Property=""Background"" Value=""#ef4444""/>
+                    <Style x:Key=""RedBtn"" TargetType=""Button"">
+                        <Setter Property=""Background"" Value=""#dc2626""/>
+                        <Setter Property=""Foreground"" Value=""White""/>
+                        <Setter Property=""FontWeight"" Value=""Bold""/>
+                        <Setter Property=""Padding"" Value=""15,8""/>
+                        <Setter Property=""BorderThickness"" Value=""0""/>
+                        <Setter Property=""Cursor"" Value=""Hand""/>
                         <Setter Property=""Template"">
                             <Setter.Value>
                                 <ControlTemplate TargetType=""Button"">
-                                    <Border x:Name=""border"" CornerRadius=""15"" Background=""{TemplateBinding Background}"">
+                                    <Border x:Name=""border"" CornerRadius=""8"" Background=""{TemplateBinding Background}"">
                                         <ContentPresenter HorizontalAlignment=""Center"" VerticalAlignment=""Center""/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property=""IsMouseOver"" Value=""True"">
-                                            <Setter TargetName=""border"" Property=""Background"" Value=""#f87171""/>
+                                            <Setter TargetName=""border"" Property=""Background"" Value=""#ef4444""/>
+                                        </Trigger>
+                                        <Trigger Property=""IsPressed"" Value=""True"">
+                                            <Setter TargetName=""border"" Property=""Background"" Value=""#b91c1c""/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </Setter.Value>
                         </Setter>
                     </Style>
-                    <Style x:Key=""GreenBtn"" TargetType=""Button"" BasedOn=""{StaticResource ModernBtn}"">
-                        <Setter Property=""Background"" Value=""#10b981""/>
+                    <Style x:Key=""GreenBtn"" TargetType=""Button"">
+                        <Setter Property=""Background"" Value=""#059669""/>
+                        <Setter Property=""Foreground"" Value=""White""/>
+                        <Setter Property=""FontWeight"" Value=""Bold""/>
+                        <Setter Property=""Padding"" Value=""15,8""/>
+                        <Setter Property=""BorderThickness"" Value=""0""/>
+                        <Setter Property=""Cursor"" Value=""Hand""/>
                         <Setter Property=""Template"">
                             <Setter.Value>
                                 <ControlTemplate TargetType=""Button"">
-                                    <Border x:Name=""border"" CornerRadius=""15"" Background=""{TemplateBinding Background}"">
+                                    <Border x:Name=""border"" CornerRadius=""8"" Background=""{TemplateBinding Background}"">
                                         <ContentPresenter HorizontalAlignment=""Center"" VerticalAlignment=""Center""/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property=""IsMouseOver"" Value=""True"">
-                                            <Setter TargetName=""border"" Property=""Background"" Value=""#34d399""/>
+                                            <Setter TargetName=""border"" Property=""Background"" Value=""#10b981""/>
+                                        </Trigger>
+                                        <Trigger Property=""IsPressed"" Value=""True"">
+                                            <Setter TargetName=""border"" Property=""Background"" Value=""#047857""/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                    <Style x:Key=""MapFilterBtnStyle"" TargetType=""Button"">
+                        <Setter Property=""Background"" Value=""#27272a""/>
+                        <Setter Property=""Foreground"" Value=""#a1a1aa""/>
+                        <Setter Property=""FontWeight"" Value=""SemiBold""/>
+                        <Setter Property=""FontSize"" Value=""10""/>
+                        <Setter Property=""Height"" Value=""26""/>
+                        <Setter Property=""Padding"" Value=""12,0""/>
+                        <Setter Property=""Margin"" Value=""0,0,8,8""/>
+                        <Setter Property=""Cursor"" Value=""Hand""/>
+                        <Setter Property=""Template"">
+                            <Setter.Value>
+                                <ControlTemplate TargetType=""Button"">
+                                    <Border x:Name=""border"" CornerRadius=""13"" Background=""{TemplateBinding Background}"" BorderBrush=""#3f3f46"" BorderThickness=""1"">
+                                        <ContentPresenter HorizontalAlignment=""Center"" VerticalAlignment=""Center""/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property=""IsMouseOver"" Value=""True"">
+                                            <Setter TargetName=""border"" Property=""Background"" Value=""#3f3f46""/>
+                                            <Setter Property=""Foreground"" Value=""White""/>
+                                            <Setter TargetName=""border"" Property=""BorderBrush"" Value=""#52525b""/>
+                                        </Trigger>
+                                        <Trigger Property=""IsPressed"" Value=""True"">
+                                            <Setter TargetName=""border"" Property=""Background"" Value=""#18181b""/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                    <Style x:Key=""MapFilterBtnActiveStyle"" TargetType=""Button"" BasedOn=""{StaticResource MapFilterBtnStyle}"">
+                        <Setter Property=""Background"" Value=""#7c3aed""/>
+                        <Setter Property=""Foreground"" Value=""White""/>
+                        <Setter Property=""Template"">
+                            <Setter.Value>
+                                <ControlTemplate TargetType=""Button"">
+                                    <Border x:Name=""border"" CornerRadius=""13"" Background=""{TemplateBinding Background}"" BorderBrush=""#a78bfa"" BorderThickness=""1"">
+                                        <ContentPresenter HorizontalAlignment=""Center"" VerticalAlignment=""Center""/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property=""IsMouseOver"" Value=""True"">
+                                            <Setter TargetName=""border"" Property=""Background"" Value=""#8b5cf6""/>
+                                            <Setter TargetName=""border"" Property=""BorderBrush"" Value=""#c084fc""/>
+                                        </Trigger>
+                                        <Trigger Property=""IsPressed"" Value=""True"">
+                                            <Setter TargetName=""border"" Property=""Background"" Value=""#6d28d9""/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                    <Style x:Key=""SearchTextBox"" TargetType=""TextBox"">
+                        <Setter Property=""Background"" Value=""#1f1f23""/>
+                        <Setter Property=""Foreground"" Value=""White""/>
+                        <Setter Property=""BorderBrush"" Value=""#2e2e34""/>
+                        <Setter Property=""BorderThickness"" Value=""1""/>
+                        <Setter Property=""Padding"" Value=""8,2""/>
+                        <Setter Property=""VerticalContentAlignment"" Value=""Center""/>
+                        <Setter Property=""Template"">
+                            <Setter.Value>
+                                <ControlTemplate TargetType=""TextBox"">
+                                    <Border Name=""Border"" CornerRadius=""8"" Background=""{TemplateBinding Background}"" BorderBrush=""{TemplateBinding BorderBrush}"" BorderThickness=""{TemplateBinding BorderThickness}"">
+                                        <Grid Margin=""{TemplateBinding Padding}"">
+                                            <TextBlock x:Name=""Placeholder"" Text=""Поиск по карте, заметкам..."" Foreground=""#71717a"" IsHitTestVisible=""False"" VerticalAlignment=""Center"" Visibility=""Collapsed""/>
+                                            <ScrollViewer Name=""PART_ContentHost"" Focusable=""False"" HorizontalScrollBarVisibility=""Hidden"" VerticalScrollBarVisibility=""Hidden"" VerticalAlignment=""Center""/>
+                                        </Grid>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property=""Text"" Value="""">
+                                            <Setter TargetName=""Placeholder"" Property=""Visibility"" Value=""Visible""/>
+                                        </Trigger>
+                                        <Trigger Property=""IsFocused"" Value=""True"">
+                                            <Setter TargetName=""Border"" Property=""BorderBrush"" Value=""#7c3aed""/>
+                                            <Setter TargetName=""Border"" Property=""Background"" Value=""#18181b""/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -533,7 +632,7 @@ namespace FaceitDemoManager
                                     
                                     <StackPanel Grid.Column=""0"" Orientation=""Horizontal"" VerticalAlignment=""Center"">
                                         <TextBlock Text=""🔍"" Foreground=""#71717a"" VerticalAlignment=""Center"" Margin=""0,0,5,0""/>
-                                        <TextBox Name=""TxtSearch"" Width=""170"" Height=""25"" VerticalContentAlignment=""Center""/>
+                                        <TextBox Name=""TxtSearch"" Style=""{StaticResource SearchTextBox}"" Width=""170"" Height=""26"" VerticalContentAlignment=""Center""/>
                                     </StackPanel>
                                     
                                     <StackPanel Grid.Column=""2"" Orientation=""Horizontal"">

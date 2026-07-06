@@ -1,22 +1,31 @@
-$cscPath = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
-if (-not (Test-Path $cscPath)) {
-    Write-Error "C# Compiler (csc.exe) not found at: $cscPath"
+$dotnetPath = "dotnet"
+if (-not (Get-Command $dotnetPath -ErrorAction SilentlyContinue)) {
+    $dotnetPath = "C:\Users\Neuron\dotnet\dotnet.exe"
+}
+if (-not (Test-Path $dotnetPath)) {
+    Write-Error ".NET SDK (dotnet.exe) not found at: $dotnetPath"
     exit 1
 }
 
 $output = "C:\Users\Neuron\.gemini\antigravity\scratch\faceit-demo-manager\FaceitDemoManager.exe"
 
-Write-Host "Compiling FaceitDemoManager Modular WPF Application with App Icon..." -ForegroundColor Cyan
+Write-Host "Compiling FaceitDemoManager WPF Application using .NET 8.0 SDK..." -ForegroundColor Cyan
 
-# Gather all .cs files excluding Installer.cs
-$csFiles = Get-ChildItem -Filter *.cs | Where-Object { $_.Name -ne "Installer.cs" } | ForEach-Object { $_.FullName }
+# Clean previous build artifacts
+if (Test-Path "bin") { Remove-Item -Path "bin" -Recurse -Force -ErrorAction SilentlyContinue }
+if (Test-Path "obj") { Remove-Item -Path "obj" -Recurse -Force -ErrorAction SilentlyContinue }
+if (Test-Path $output) { Remove-Item -Path $output -Force -ErrorAction SilentlyContinue }
 
-# Compile main application with app.ico icon
-& $cscPath /target:winexe /win32icon:app.ico /lib:"C:\Windows\Microsoft.NET\Framework64\v4.0.30319","C:\Windows\Microsoft.NET\Framework64\v4.0.30319\WPF" /r:PresentationFramework.dll /r:PresentationCore.dll /r:WindowsBase.dll /r:System.Xaml.dll /r:System.Windows.Forms.dll /r:System.Drawing.dll /out:$output $csFiles
+# Run dotnet publish with SingleFile and ReadyToRun optimizations
+& $dotnetPath publish FaceitDemoManager.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:PublishReadyToRun=true
 
-if (Test-Path $output) {
+$publishExe = "bin\Release\net8.0-windows\win-x64\publish\FaceitDemoManager.exe"
+
+if (Test-Path $publishExe) {
+    Copy-Item -Path $publishExe -Destination $output -Force
     Write-Host "Compilation successful!" -ForegroundColor Green
     Write-Host "Output file: $output" -ForegroundColor Green
 } else {
-    Write-Error "Compilation failed."
+    Write-Error "Compilation failed: Executable not found at $publishExe"
+    exit 1
 }

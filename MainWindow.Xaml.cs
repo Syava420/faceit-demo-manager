@@ -306,13 +306,13 @@ namespace FaceitDemoManager
 
             if (tabIndex == 0) // Import
             {
-                tabImport.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8b5cf6"));
+                tabImport.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#7c3aed"));
                 tabImport.Foreground = Brushes.White;
                 gridImportTab.Visibility = Visibility.Visible;
             }
             else if (tabIndex == 1) // Library
             {
-                tabLibrary.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8b5cf6"));
+                tabLibrary.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#7c3aed"));
                 tabLibrary.Foreground = Brushes.White;
                 gridLibraryTab.Visibility = Visibility.Visible;
                 sidebarLibraryControls.Visibility = Visibility.Visible;
@@ -321,7 +321,7 @@ namespace FaceitDemoManager
             }
             else if (tabIndex == 2) // Binds
             {
-                tabBinds.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8b5cf6"));
+                tabBinds.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#7c3aed"));
                 tabBinds.Foreground = Brushes.White;
                 gridBindsTab.Visibility = Visibility.Visible;
                 
