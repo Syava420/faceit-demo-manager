@@ -106,6 +106,15 @@ namespace FaceitDemoManager
             this.Background = Brushes.Transparent;
             this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
+            try
+            {
+                this.Icon = System.Windows.Media.Imaging.BitmapFrame.Create(new Uri("pack://application:,,,/FaceitDemoManager;component/app.ico", UriKind.RelativeOrAbsolute));
+            }
+            catch (Exception)
+            {
+                // Fallback
+            }
+
             Border root = (Border)XamlReader.Parse(GetXamlString());
             this.Content = root;
 
