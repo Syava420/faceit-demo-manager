@@ -131,15 +131,15 @@ namespace FaceitDemoManager
                         <Setter Property=""Background"" Value=""#27272a""/>
                         <Setter Property=""Foreground"" Value=""#a1a1aa""/>
                         <Setter Property=""FontWeight"" Value=""SemiBold""/>
-                        <Setter Property=""FontSize"" Value=""10""/>
-                        <Setter Property=""Height"" Value=""26""/>
+                        <Setter Property=""FontSize"" Value=""11""/>
+                        <Setter Property=""Height"" Value=""28""/>
                         <Setter Property=""Padding"" Value=""12,0""/>
                         <Setter Property=""Margin"" Value=""0,0,8,8""/>
                         <Setter Property=""Cursor"" Value=""Hand""/>
                         <Setter Property=""Template"">
                             <Setter.Value>
                                 <ControlTemplate TargetType=""Button"">
-                                    <Border x:Name=""border"" CornerRadius=""13"" Background=""{TemplateBinding Background}"" BorderBrush=""#3f3f46"" BorderThickness=""1"">
+                                    <Border x:Name=""border"" CornerRadius=""6"" Background=""{TemplateBinding Background}"" BorderBrush=""#3f3f46"" BorderThickness=""1"">
                                         <ContentPresenter HorizontalAlignment=""Center"" VerticalAlignment=""Center""/>
                                     </Border>
                                     <ControlTemplate.Triggers>
@@ -162,7 +162,7 @@ namespace FaceitDemoManager
                         <Setter Property=""Template"">
                             <Setter.Value>
                                 <ControlTemplate TargetType=""Button"">
-                                    <Border x:Name=""border"" CornerRadius=""13"" Background=""{TemplateBinding Background}"" BorderBrush=""#a78bfa"" BorderThickness=""1"">
+                                    <Border x:Name=""border"" CornerRadius=""6"" Background=""{TemplateBinding Background}"" BorderBrush=""#a78bfa"" BorderThickness=""1"">
                                         <ContentPresenter HorizontalAlignment=""Center"" VerticalAlignment=""Center""/>
                                     </Border>
                                     <ControlTemplate.Triggers>
@@ -190,8 +190,15 @@ namespace FaceitDemoManager
                                 <ControlTemplate TargetType=""TextBox"">
                                     <Border Name=""Border"" CornerRadius=""8"" Background=""{TemplateBinding Background}"" BorderBrush=""{TemplateBinding BorderBrush}"" BorderThickness=""{TemplateBinding BorderThickness}"">
                                         <Grid Margin=""{TemplateBinding Padding}"">
-                                            <TextBlock x:Name=""Placeholder"" Text=""Поиск по карте, заметкам..."" Foreground=""#71717a"" IsHitTestVisible=""False"" VerticalAlignment=""Center"" Visibility=""Collapsed""/>
-                                            <ScrollViewer Name=""PART_ContentHost"" Focusable=""False"" HorizontalScrollBarVisibility=""Hidden"" VerticalScrollBarVisibility=""Hidden"" VerticalAlignment=""Center""/>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width=""20""/>
+                                                <ColumnDefinition Width=""*""/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column=""0"" Text=""🔍"" Foreground=""#71717a"" VerticalAlignment=""Center"" Margin=""0,0,5,0"" IsHitTestVisible=""False""/>
+                                            <Grid Grid.Column=""1"">
+                                                <TextBlock x:Name=""Placeholder"" Text=""Поиск по карте, заметкам..."" Foreground=""#71717a"" IsHitTestVisible=""False"" VerticalAlignment=""Center"" Visibility=""Collapsed""/>
+                                                <ScrollViewer Name=""PART_ContentHost"" Focusable=""False"" HorizontalScrollBarVisibility=""Hidden"" VerticalScrollBarVisibility=""Hidden"" VerticalAlignment=""Center""/>
+                                            </Grid>
                                         </Grid>
                                     </Border>
                                     <ControlTemplate.Triggers>
@@ -524,8 +531,8 @@ namespace FaceitDemoManager
                                             <ColumnDefinition Width=""8""/>
                                             <ColumnDefinition Width=""*""/>
                                         </Grid.ColumnDefinitions>
-                                        <Button Name=""BtnNewCategory"" Grid.Column=""0"" Content=""📁 + Папка"" Style=""{StaticResource ModernBtn}"" Background=""#27272a"" Foreground=""White"" Height=""30""/>
-                                        <Button Name=""BtnDeleteCategory"" Grid.Column=""2"" Content=""🗑️ - Папка"" Style=""{StaticResource RedBtn}"" Height=""30""/>
+                                        <Button Name=""BtnNewCategory"" Grid.Column=""0"" Content=""📁 + Папка"" Style=""{StaticResource ModernBtn}"" Background=""#27272a"" Foreground=""White"" Height=""32""/>
+                                        <Button Name=""BtnDeleteCategory"" Grid.Column=""2"" Content=""🗑️ - Папка"" Style=""{StaticResource RedBtn}"" Height=""32""/>
                                     </Grid>
                                 </Grid>
                             </Grid>
@@ -578,30 +585,30 @@ namespace FaceitDemoManager
                                             
                                             <TextBlock Text=""Папка загрузок (Downloads)"" Foreground=""#a1a1aa"" FontSize=""10"" FontWeight=""Bold"" Margin=""0,0,0,2""/>
                                             <DockPanel LastChildFill=""True"" Margin=""0,0,0,10"">
-                                                <Button Name=""BtnBrowseDownloads"" DockPanel.Dock=""Right"" Content=""..."" Style=""{StaticResource ModernBtn}"" Height=""25"" Width=""35"" Margin=""5,0,0,0""/>
-                                                <TextBox Name=""TxtDownloads"" Height=""25"" VerticalContentAlignment=""Center""/>
+                                                <Button Name=""BtnBrowseDownloads"" DockPanel.Dock=""Right"" Content=""..."" Style=""{StaticResource ModernBtn}"" Height=""28"" Width=""35"" Margin=""5,0,0,0""/>
+                                                <TextBox Name=""TxtDownloads"" Height=""28"" VerticalContentAlignment=""Center""/>
                                             </DockPanel>
                                             
                                             <TextBlock Text=""Путь к CS2 (game\csgo)"" Foreground=""#a1a1aa"" FontSize=""10"" FontWeight=""Bold"" Margin=""0,0,0,2""/>
                                             <DockPanel LastChildFill=""True"" Margin=""0,0,0,10"">
-                                                <Button Name=""BtnBrowseCS2"" DockPanel.Dock=""Right"" Content=""..."" Style=""{StaticResource ModernBtn}"" Height=""25"" Width=""35"" Margin=""5,0,0,0""/>
-                                                <Button Name=""BtnAutoCS2"" DockPanel.Dock=""Right"" Content=""Авто-поиск"" Style=""{StaticResource ModernBtn}"" Height=""25"" Padding=""8,2"" Margin=""5,0,0,0""/>
-                                                <TextBox Name=""TxtCS2"" Height=""25"" VerticalContentAlignment=""Center""/>
+                                                <Button Name=""BtnBrowseCS2"" DockPanel.Dock=""Right"" Content=""..."" Style=""{StaticResource ModernBtn}"" Height=""28"" Width=""35"" Margin=""5,0,0,0""/>
+                                                <Button Name=""BtnAutoCS2"" DockPanel.Dock=""Right"" Content=""Авто-поиск"" Style=""{StaticResource ModernBtn}"" Height=""28"" Padding=""8,2"" Margin=""5,0,0,0""/>
+                                                <TextBox Name=""TxtCS2"" Height=""28"" VerticalContentAlignment=""Center""/>
                                             </DockPanel>
                                             
                                             <TextBlock Text=""Никнейм на Faceit (для парсинга K/D)"" Foreground=""#a1a1aa"" FontSize=""10"" FontWeight=""Bold"" Margin=""0,0,0,2""/>
-                                            <TextBox Name=""TxtNickname"" Height=""25"" VerticalContentAlignment=""Center"" Margin=""0,0,0,15""/>
+                                            <TextBox Name=""TxtNickname"" Height=""28"" VerticalContentAlignment=""Center"" Margin=""0,0,0,15""/>
                                             
                                             <!-- Параметры импорта -->
                                             <TextBlock Text=""Режим авто-импорта демок:"" Foreground=""#a1a1aa"" FontSize=""10"" FontWeight=""Bold"" Margin=""0,0,0,2""/>
-                                            <ComboBox Name=""CboImportMode"" Height=""25"" Margin=""0,0,0,8"" Background=""#27272a"" Foreground=""White"">
+                                            <ComboBox Name=""CboImportMode"" Height=""28"" Margin=""0,0,0,8"" Background=""#27272a"" Foreground=""White"">
                                                 <ComboBoxItem Content=""Всегда в общую (General)"" Tag=""General"" IsSelected=""True""/>
                                                 <ComboBoxItem Content=""Спрашивать при импорте"" Tag=""Ask""/>
                                                 <ComboBoxItem Content=""В выбранную папку..."" Tag=""Specific""/>
                                             </ComboBox>
                                             
                                             <TextBlock Text=""Выбранная папка для импорта:"" Foreground=""#a1a1aa"" FontSize=""10"" FontWeight=""Bold"" Margin=""0,0,0,2""/>
-                                            <ComboBox Name=""CboImportFolder"" Height=""25"" Margin=""0,0,0,15"" Background=""#27272a"" Foreground=""White"" IsEnabled=""False""/>
+                                            <ComboBox Name=""CboImportFolder"" Height=""28"" Margin=""0,0,0,15"" Background=""#27272a"" Foreground=""White"" IsEnabled=""False""/>
                                             
                                             <CheckBox Name=""ChkWatchFolder"" Content=""Авто-сканирование загрузок"" Margin=""0,0,0,8""/>
                                             <CheckBox Name=""ChkTray"" Content=""Сворачивать в трей"" Margin=""0,0,0,8""/>
@@ -625,20 +632,17 @@ namespace FaceitDemoManager
                                 <!-- Top Search & Controls Row -->
                                 <Grid Grid.Row=""0"" Margin=""0,0,0,10"">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width=""200""/>
+                                        <ColumnDefinition Width=""240""/>
                                         <ColumnDefinition Width=""*""/>
                                         <ColumnDefinition Width=""Auto""/>
                                     </Grid.ColumnDefinitions>
                                     
-                                    <StackPanel Grid.Column=""0"" Orientation=""Horizontal"" VerticalAlignment=""Center"">
-                                        <TextBlock Text=""🔍"" Foreground=""#71717a"" VerticalAlignment=""Center"" Margin=""0,0,5,0""/>
-                                        <TextBox Name=""TxtSearch"" Style=""{StaticResource SearchTextBox}"" Width=""170"" Height=""26"" VerticalContentAlignment=""Center""/>
-                                    </StackPanel>
+                                    <TextBox Name=""TxtSearch"" Grid.Column=""0"" Style=""{StaticResource SearchTextBox}"" Width=""220"" Height=""32"" HorizontalAlignment=""Left"" VerticalContentAlignment=""Center""/>
                                     
                                     <StackPanel Grid.Column=""2"" Orientation=""Horizontal"">
-                                        <Button Name=""BtnPlay"" Content=""▶  Запустить в CS2"" Style=""{StaticResource GreenBtn}"" Width=""160"" Height=""30"" Margin=""0,0,8,0""/>
-                                        <Button Name=""BtnMoveDemo"" Content=""📁 Перенести"" Style=""{StaticResource ModernBtn}"" Width=""120"" Height=""30"" Margin=""0,0,8,0""/>
-                                        <Button Name=""BtnDeleteDemo"" Content=""🗑️ Удалить"" Style=""{StaticResource RedBtn}"" Width=""90"" Height=""30""/>
+                                        <Button Name=""BtnPlay"" Content=""▶  Запустить в CS2"" Style=""{StaticResource GreenBtn}"" Width=""160"" Height=""32"" Margin=""0,0,8,0""/>
+                                        <Button Name=""BtnMoveDemo"" Content=""📁 Перенести"" Style=""{StaticResource ModernBtn}"" Width=""120"" Height=""32"" Margin=""0,0,8,0""/>
+                                        <Button Name=""BtnDeleteDemo"" Content=""🗑️ Удалить"" Style=""{StaticResource RedBtn}"" Width=""95"" Height=""32""/>
                                     </StackPanel>
                                 </Grid>
 
