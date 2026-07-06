@@ -334,8 +334,13 @@ namespace FaceitDemoManager
             Button btn = new Button();
             btn.Content = (mapName == null) ? "Все карты" : GetMapEmoji(mapName) + " " + mapName;
             
-            // Resolve XAML style for modern hover states and aesthetics
-            Style style = (Style)this.FindResource(isActive ? "MapFilterBtnActiveStyle" : "MapFilterBtnStyle");
+            // Resolve XAML style starting from the root Border content
+            Style style = null;
+            FrameworkElement contentElement = this.Content as FrameworkElement;
+            if (contentElement != null)
+            {
+                style = contentElement.TryFindResource(isActive ? "MapFilterBtnActiveStyle" : "MapFilterBtnStyle") as Style;
+            }
             if (style != null)
             {
                 btn.Style = style;
