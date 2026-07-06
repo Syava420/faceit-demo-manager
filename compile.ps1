@@ -17,7 +17,7 @@ if (Test-Path "obj") { Remove-Item -Path "obj" -Recurse -Force -ErrorAction Sile
 if (Test-Path $output) { Remove-Item -Path $output -Force -ErrorAction SilentlyContinue }
 
 # Run dotnet publish with SingleFile and ReadyToRun optimizations
-& $dotnetPath publish FaceitDemoManager.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:PublishReadyToRun=true
+& $dotnetPath publish FaceitDemoManager.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishReadyToRun=true
 
 $publishExe = "bin\Release\net8.0-windows\win-x64\publish\FaceitDemoManager.exe"
 
