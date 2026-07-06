@@ -473,9 +473,9 @@ namespace FaceitDemoManager
                                     <RowDefinition Height=""*""/>    <!-- ListBox (Row 8) -->
                                 </Grid.RowDefinitions>
                                 
-                                <Button Name=""TabImport"" Grid.Row=""0"" Content=""⚡ Распаковка демок"" Style=""{StaticResource TabBtn}"" Background=""#8b5cf6"" Foreground=""White"" Height=""35"" Padding=""15,0""/>
-                                <Button Name=""TabLibrary"" Grid.Row=""2"" Content=""📚 Библиотека матчей"" Style=""{StaticResource TabBtn}"" Background=""Transparent"" Foreground=""Gray"" Height=""35"" Padding=""15,0""/>
-                                <Button Name=""TabBinds"" Grid.Row=""4"" Content=""⌨️ Бинды для CS2"" Style=""{StaticResource TabBtn}"" Background=""Transparent"" Foreground=""Gray"" Height=""35"" Padding=""15,0""/>
+                                <Button Name=""TabImport"" Grid.Row=""0"" Content=""Распаковка демок"" Style=""{StaticResource TabBtn}"" Background=""#8b5cf6"" Foreground=""White"" Height=""35"" Padding=""15,0""/>
+                                <Button Name=""TabLibrary"" Grid.Row=""2"" Content=""Библиотека матчей"" Style=""{StaticResource TabBtn}"" Background=""Transparent"" Foreground=""Gray"" Height=""35"" Padding=""15,0""/>
+                                <Button Name=""TabBinds"" Grid.Row=""4"" Content=""Бинды для CS2"" Style=""{StaticResource TabBtn}"" Background=""Transparent"" Foreground=""Gray"" Height=""35"" Padding=""15,0""/>
                                 
                                 <!-- Folder Categories Section Header (only relevant for Library tab) -->
                                 <TextBlock Name=""SidebarCategoriesHeader"" Grid.Row=""6"" Text=""ИГРОКИ / КАТЕГОРИИ"" Foreground=""#52525b"" FontSize=""10"" FontWeight=""Bold"" Visibility=""Collapsed""/>
@@ -531,8 +531,8 @@ namespace FaceitDemoManager
                                             <ColumnDefinition Width=""8""/>
                                             <ColumnDefinition Width=""*""/>
                                         </Grid.ColumnDefinitions>
-                                        <Button Name=""BtnNewCategory"" Grid.Column=""0"" Content=""📁 + Папка"" Style=""{StaticResource ModernBtn}"" Background=""#27272a"" Foreground=""White"" Height=""32""/>
-                                        <Button Name=""BtnDeleteCategory"" Grid.Column=""2"" Content=""🗑️ - Папка"" Style=""{StaticResource RedBtn}"" Height=""32""/>
+                                        <Button Name=""BtnNewCategory"" Grid.Column=""0"" Content=""+ Папка"" Style=""{StaticResource ModernBtn}"" Background=""#27272a"" Foreground=""White"" Height=""32""/>
+                                        <Button Name=""BtnDeleteCategory"" Grid.Column=""2"" Content=""- Папка"" Style=""{StaticResource RedBtn}"" Height=""32""/>
                                     </Grid>
                                 </Grid>
                             </Grid>
@@ -616,7 +616,7 @@ namespace FaceitDemoManager
                                         </StackPanel>
                                     </Border>
                                     
-                                    <Button Name=""BtnProcess"" Grid.Row=""1"" Content=""🔄 Запустить ручное сканирование"" Style=""{StaticResource GreenBtn}"" Height=""35"" Margin=""0,15,0,0""/>
+                                    <Button Name=""BtnProcess"" Grid.Row=""1"" Content=""Запустить ручное сканирование"" Style=""{StaticResource GreenBtn}"" Height=""35"" Margin=""0,15,0,0""/>
                                 </Grid>
                             </Grid>
                             
@@ -640,9 +640,9 @@ namespace FaceitDemoManager
                                     <TextBox Name=""TxtSearch"" Grid.Column=""0"" Style=""{StaticResource SearchTextBox}"" Width=""220"" Height=""32"" HorizontalAlignment=""Left"" VerticalContentAlignment=""Center""/>
                                     
                                     <StackPanel Grid.Column=""2"" Orientation=""Horizontal"">
-                                        <Button Name=""BtnPlay"" Content=""▶  Запустить в CS2"" Style=""{StaticResource GreenBtn}"" Width=""160"" Height=""32"" Margin=""0,0,8,0""/>
-                                        <Button Name=""BtnMoveDemo"" Content=""📁 Перенести"" Style=""{StaticResource ModernBtn}"" Width=""120"" Height=""32"" Margin=""0,0,8,0""/>
-                                        <Button Name=""BtnDeleteDemo"" Content=""🗑️ Удалить"" Style=""{StaticResource RedBtn}"" Width=""95"" Height=""32""/>
+                                        <Button Name=""BtnPlay"" Content=""Запустить в CS2"" Style=""{StaticResource GreenBtn}"" Width=""160"" Height=""32"" Margin=""0,0,8,0""/>
+                                        <Button Name=""BtnMoveDemo"" Content=""Перенести"" Style=""{StaticResource ModernBtn}"" Width=""120"" Height=""32"" Margin=""0,0,8,0""/>
+                                        <Button Name=""BtnDeleteDemo"" Content=""Удалить"" Style=""{StaticResource RedBtn}"" Width=""95"" Height=""32""/>
                                     </StackPanel>
                                 </Grid>
 
@@ -887,10 +887,10 @@ namespace FaceitDemoManager
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Orientation=""Horizontal"" VerticalAlignment=""Center"">
                                         <CheckBox Name=""ChkAutoApplyBinds"" Content=""Применять при запуске"" IsChecked=""True"" VerticalAlignment=""Center"" Margin=""0,0,15,0""/>
-                                        <Button Name=""BtnAddBind"" Content=""➕ Добавить бинд"" Style=""{StaticResource ModernBtn}"" Background=""#10b981"" Height=""32"" Padding=""12,0"" Margin=""0,0,8,0""/>
-                                        <Button Name=""BtnDeleteBind"" Content=""❌ Удалить"" Style=""{StaticResource ModernBtn}"" Background=""#ef4444"" Height=""32"" Padding=""12,0""/>
+                                        <Button Name=""BtnAddBind"" Content=""Добавить бинд"" Style=""{StaticResource ModernBtn}"" Background=""#10b981"" Height=""32"" Padding=""12,0"" Margin=""0,0,8,0""/>
+                                        <Button Name=""BtnDeleteBind"" Content=""Удалить"" Style=""{StaticResource ModernBtn}"" Background=""#ef4444"" Height=""32"" Padding=""12,0""/>
                                     </StackPanel>
-                                    <Button Name=""BtnResetBinds"" Grid.Column=""1"" Content=""🔄 Сбросить по умолчанию"" Style=""{StaticResource ModernBtn}"" Height=""32"" Padding=""15,0""/>
+                                    <Button Name=""BtnResetBinds"" Grid.Column=""1"" Content=""Сбросить по умолчанию"" Style=""{StaticResource ModernBtn}"" Height=""32"" Padding=""15,0""/>
                                 </Grid>
                             </Grid>
                         </Grid>

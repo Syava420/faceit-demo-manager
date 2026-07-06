@@ -332,7 +332,7 @@ namespace FaceitDemoManager
         private Button CreateMapFilterButton(string mapName, bool isActive)
         {
             Button btn = new Button();
-            btn.Content = (mapName == null) ? "Все карты" : GetMapEmoji(mapName) + " " + mapName;
+            btn.Content = (mapName == null) ? "Все карты" : mapName;
             
             // Resolve XAML style starting from the root Border content
             Style style = null;
