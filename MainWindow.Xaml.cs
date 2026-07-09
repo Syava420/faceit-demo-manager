@@ -173,9 +173,13 @@ namespace FaceitDemoManager
             // Event Bindings
             this.Closing += MainWindow_Closing;
             
-            // TitleBar Drag
+            // TitleBar Drag & Double-Click to test error handler
             Grid titleBar = (Grid)root.FindName("TitleBar");
             titleBar.MouseLeftButtonDown += (s, e) => {
+                if (e.ClickCount == 2)
+                {
+                    throw new InvalidOperationException("Тестовое исключение для проверки глобального перехватчика ошибок (Global Runtime Error Monitoring)!");
+                }
                 if (e.LeftButton == MouseButtonState.Pressed) this.DragMove();
             };
 
