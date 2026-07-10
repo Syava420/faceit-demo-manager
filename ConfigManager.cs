@@ -44,6 +44,7 @@ namespace FaceitDemoManager
             list.Add(new DemoBind() { IsEnabled = true, ActionName = "Отмотать назад (5 сек)", Key = "LEFTARROW", Command = "demo_goto -1000 1 0" });
             list.Add(new DemoBind() { IsEnabled = true, ActionName = "Чистый экран (Скрыть HUD)", Key = "h", Command = "toggle cl_draw_only_deathnotices 0 1" });
             list.Add(new DemoBind() { IsEnabled = true, ActionName = "Подсветка сквозь стены (X-Ray)", Key = "x", Command = "toggle spec_show_xray 0 1" });
+            list.Add(new DemoBind() { IsEnabled = true, ActionName = "Вкл/Выкл войс-чат в демке", Key = "v", Command = "toggle tv_listen_voice_indices -1 0; toggle tv_listen_voice_indices_h -1 0" });
             return list;
         }
 
