@@ -22,6 +22,7 @@ namespace FaceitDemoManager
         public bool MinimizeTray { get; set; }
         public bool EnableDemoVoice { get; set; }
         public bool AutoApplyBinds { get; set; } // Global auto-apply flag
+        public bool DeleteArchivesAfterUnpack { get; set; }
         public string ImportMode { get; set; }
         public string TargetImportFolder { get; set; }
         public Dictionary<string, string> FolderNicknames { get; set; }
@@ -60,6 +61,7 @@ namespace FaceitDemoManager
             settings.MinimizeTray = true;
             settings.EnableDemoVoice = true;
             settings.AutoApplyBinds = true;
+            settings.DeleteArchivesAfterUnpack = true;
             settings.ImportMode = "General";
             settings.TargetImportFolder = "General";
             settings.FolderNicknames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -79,6 +81,7 @@ namespace FaceitDemoManager
                         else if (line.StartsWith("MinimizeTray=")) settings.MinimizeTray = bool.Parse(line.Substring("MinimizeTray=".Length).Trim());
                         else if (line.StartsWith("EnableDemoVoice=")) settings.EnableDemoVoice = bool.Parse(line.Substring("EnableDemoVoice=".Length).Trim());
                         else if (line.StartsWith("AutoApplyBinds=")) settings.AutoApplyBinds = bool.Parse(line.Substring("AutoApplyBinds=".Length).Trim());
+                        else if (line.StartsWith("DeleteArchivesAfterUnpack=")) settings.DeleteArchivesAfterUnpack = bool.Parse(line.Substring("DeleteArchivesAfterUnpack=".Length).Trim());
                         else if (line.StartsWith("ImportMode=")) settings.ImportMode = line.Substring("ImportMode=".Length).Trim();
                         else if (line.StartsWith("TargetImportFolder=")) settings.TargetImportFolder = line.Substring("TargetImportFolder=".Length).Trim();
                         else if (line.StartsWith("FolderNickname:"))
@@ -196,6 +199,7 @@ namespace FaceitDemoManager
                     "MinimizeTray=" + settings.MinimizeTray.ToString(),
                     "EnableDemoVoice=" + settings.EnableDemoVoice.ToString(),
                     "AutoApplyBinds=" + settings.AutoApplyBinds.ToString(),
+                    "DeleteArchivesAfterUnpack=" + settings.DeleteArchivesAfterUnpack.ToString(),
                     "ImportMode=" + settings.ImportMode.Trim(),
                     "TargetImportFolder=" + settings.TargetImportFolder.Trim()
                 };

@@ -148,7 +148,8 @@ namespace FaceitDemoManager
             string cs2Directory,
             string nickname,
             Dictionary<string, DemoMetadata> db,
-            Action<string, bool> logCallback)
+            Action<string, bool> logCallback,
+            bool deleteZstAfter = true)
         {
             string scriptDir = AppDomain.CurrentDomain.BaseDirectory;
             string zstdPath = Path.Combine(scriptDir, zstdExeName);
@@ -263,7 +264,7 @@ namespace FaceitDemoManager
             string relPath = destPathUnique.Substring(baseDemosDir.Length).TrimStart('\\', '/').Replace('\\', '/');
             SaveMetadataForDemo(baseDemosDir, db, relPath, dm);
 
-            if (isZst && File.Exists(zstPath))
+            if (isZst && File.Exists(zstPath) && deleteZstAfter)
             {
                 File.Delete(zstPath);
             }

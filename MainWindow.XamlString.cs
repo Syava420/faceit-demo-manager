@@ -702,6 +702,7 @@ namespace FaceitDemoManager
                                             
                                             <CheckBox Name=""ChkWatchFolder"" Content=""Авто-сканирование загрузок"" Margin=""0,0,0,8""/>
                                             <CheckBox Name=""ChkTray"" Content=""Сворачивать в трей"" Margin=""0,0,0,8""/>
+                                            <CheckBox Name=""ChkDeleteArchives"" Content=""Удалять архивы после распаковки"" Margin=""0,0,0,8""/>
                                         </StackPanel>
                                     </Border>
                                     

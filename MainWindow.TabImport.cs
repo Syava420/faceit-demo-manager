@@ -87,7 +87,7 @@ namespace FaceitDemoManager
                             Action<string, bool> logCallback = (msg, isErr) => {
                                 AppendLog("Процессор демок: " + msg);
                             };
-                            if (DemoProcessor.ProcessSingleFile(file, targetCategory, cs2, nickForImport, metadataDb, logCallback))
+                            if (DemoProcessor.ProcessSingleFile(file, targetCategory, cs2, nickForImport, metadataDb, logCallback, settings.DeleteArchivesAfterUnpack))
                             {
                                 successCount++;
                             }
@@ -185,7 +185,7 @@ namespace FaceitDemoManager
                 Action<string, bool> logCallback = (msg, isErr) => {
                     AppendLog("Авто-процессор: " + msg);
                 };
-                DemoProcessor.ProcessSingleFile(e.FullPath, targetCategory, cs2, nickForImport, metadataDb, logCallback);
+                DemoProcessor.ProcessSingleFile(e.FullPath, targetCategory, cs2, nickForImport, metadataDb, logCallback, settings.DeleteArchivesAfterUnpack);
             }
             catch (Exception ex)
             {

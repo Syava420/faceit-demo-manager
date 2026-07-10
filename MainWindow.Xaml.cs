@@ -32,6 +32,7 @@ namespace FaceitDemoManager
         private CheckBox ChkWatchFolder;
         private CheckBox ChkTray;
         private CheckBox chkVoiceInDemos;
+        private CheckBox chkDeleteArchives;
         private ComboBox CboImportMode;
         private ComboBox CboImportFolder;
         private Button btnBrowseDownloads;
@@ -139,6 +140,7 @@ namespace FaceitDemoManager
             ChkWatchFolder = (CheckBox)root.FindName("ChkWatchFolder");
             ChkTray = (CheckBox)root.FindName("ChkTray");
             chkVoiceInDemos = (CheckBox)root.FindName("ChkVoiceInDemos");
+            chkDeleteArchives = (CheckBox)root.FindName("ChkDeleteArchives");
             CboImportMode = (ComboBox)root.FindName("CboImportMode");
             CboImportFolder = (ComboBox)root.FindName("CboImportFolder");
             btnBrowseDownloads = (Button)root.FindName("BtnBrowseDownloads");
@@ -249,6 +251,12 @@ namespace FaceitDemoManager
             chkAutoApplyBinds.Checked += (s, e) => SaveConfig();
             chkAutoApplyBinds.Unchecked += (s, e) => SaveConfig();
 
+            if (chkDeleteArchives != null)
+            {
+                chkDeleteArchives.Checked += (s, e) => SaveConfig();
+                chkDeleteArchives.Unchecked += (s, e) => SaveConfig();
+            }
+
             // Reset binds button
             btnResetBinds.Click += BtnResetBinds_Click;
             btnAddBind.Click += BtnAddBind_Click;
@@ -321,6 +329,14 @@ namespace FaceitDemoManager
             lstFolders.MouseDoubleClick += LstFolders_MouseDoubleClick;
         }
 
+        private void AnimateTabFadeIn(UIElement element)
+        {
+            if (element == null) return;
+            element.Visibility = Visibility.Visible;
+            var anim = new System.Windows.Media.Animation.DoubleAnimation(0, 1, new Duration(TimeSpan.FromSeconds(0.2)));
+            element.BeginAnimation(UIElement.OpacityProperty, anim);
+        }
+
         private void SwitchTab(int tabIndex)
         {
             // Reset backgrounds & foregrounds
@@ -331,35 +347,44 @@ namespace FaceitDemoManager
             tabBinds.Background = Brushes.Transparent;
             tabBinds.Foreground = Brushes.Gray;
 
+            // Collapse and reset animations
             gridImportTab.Visibility = Visibility.Collapsed;
+            gridImportTab.BeginAnimation(UIElement.OpacityProperty, null);
             gridLibraryTab.Visibility = Visibility.Collapsed;
+            gridLibraryTab.BeginAnimation(UIElement.OpacityProperty, null);
             gridBindsTab.Visibility = Visibility.Collapsed;
+            gridBindsTab.BeginAnimation(UIElement.OpacityProperty, null);
             sidebarLibraryControls.Visibility = Visibility.Collapsed;
+            sidebarLibraryControls.BeginAnimation(UIElement.OpacityProperty, null);
 
             var root = (Border)this.Content;
             var catHeader = (TextBlock)root.FindName("SidebarCategoriesHeader");
-            if (catHeader != null) catHeader.Visibility = Visibility.Collapsed;
+            if (catHeader != null)
+            {
+                catHeader.Visibility = Visibility.Collapsed;
+                catHeader.BeginAnimation(UIElement.OpacityProperty, null);
+            }
 
             if (tabIndex == 0) // Import
             {
                 tabImport.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#7c3aed"));
                 tabImport.Foreground = Brushes.White;
-                gridImportTab.Visibility = Visibility.Visible;
+                AnimateTabFadeIn(gridImportTab);
             }
             else if (tabIndex == 1) // Library
             {
                 tabLibrary.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#7c3aed"));
                 tabLibrary.Foreground = Brushes.White;
-                gridLibraryTab.Visibility = Visibility.Visible;
-                sidebarLibraryControls.Visibility = Visibility.Visible;
-                if (catHeader != null) catHeader.Visibility = Visibility.Visible;
+                AnimateTabFadeIn(gridLibraryTab);
+                AnimateTabFadeIn(sidebarLibraryControls);
+                if (catHeader != null) AnimateTabFadeIn(catHeader);
                 RefreshFolders();
             }
             else if (tabIndex == 2) // Binds
             {
                 tabBinds.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#7c3aed"));
                 tabBinds.Foreground = Brushes.White;
-                gridBindsTab.Visibility = Visibility.Visible;
+                AnimateTabFadeIn(gridBindsTab);
                 
                 // Refresh binds list to reflect updates
                 dgvBinds.ItemsSource = null;
@@ -489,6 +514,7 @@ namespace FaceitDemoManager
             ChkTray.IsChecked = settings.MinimizeTray;
             if (chkVoiceInDemos != null) chkVoiceInDemos.IsChecked = settings.EnableDemoVoice;
             chkAutoApplyBinds.IsChecked = settings.AutoApplyBinds;
+            if (chkDeleteArchives != null) chkDeleteArchives.IsChecked = settings.DeleteArchivesAfterUnpack;
 
             dgvBinds.ItemsSource = settings.Binds;
 
@@ -555,6 +581,7 @@ namespace FaceitDemoManager
             settings.MinimizeTray = ChkTray.IsChecked == true;
             if (chkVoiceInDemos != null) settings.EnableDemoVoice = chkVoiceInDemos.IsChecked == true;
             settings.AutoApplyBinds = chkAutoApplyBinds.IsChecked == true;
+            if (chkDeleteArchives != null) settings.DeleteArchivesAfterUnpack = chkDeleteArchives.IsChecked == true;
 
             var selectedItem = (ComboBoxItem)CboImportMode.SelectedItem;
             if (selectedItem != null) settings.ImportMode = selectedItem.Tag.ToString();
