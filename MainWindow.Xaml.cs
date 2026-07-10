@@ -144,6 +144,7 @@ namespace FaceitDemoManager
 
             gridLibraryTab = (Grid)root.FindName("GridLibraryTab");
             lstFolders = (ListBox)root.FindName("LstFolders");
+            if (lstFolders != null) lstFolders.AllowDrop = true;
             txtSearch = (TextBox)root.FindName("TxtSearch");
             dgvDemos = (DataGrid)root.FindName("DgvDemos");
             pnlMapFilters = (WrapPanel)root.FindName("PnlMapFilters");

@@ -549,7 +549,7 @@ namespace FaceitDemoManager
 
         private void LstFolders_DragOver(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent("DemoGridRows") || e.Data.GetDataPresent("FolderItem"))
+            if (e.Data.GetDataPresent("DemoGridRows") || e.Data.GetDataPresent("FolderItemPath"))
             {
                 e.Effects = DragDropEffects.Move;
             }
@@ -602,13 +602,25 @@ namespace FaceitDemoManager
                     }
                 }
             }
-            else if (e.Data.GetDataPresent("FolderItem"))
+            else if (e.Data.GetDataPresent("FolderItemPath"))
             {
-                var draggedFolder = e.Data.GetData("FolderItem") as FolderItem;
-                if (draggedFolder != null)
+                var draggedPath = e.Data.GetData("FolderItemPath") as string;
+                if (draggedPath != null)
                 {
-                    string targetRelPath = (targetFolder == null) ? "[Все демки]" : targetFolder.RelativePath;
-                    MoveFolder(draggedFolder, targetRelPath);
+                    FolderItem draggedFolder = null;
+                    foreach (var item in lstFolders.Items)
+                    {
+                        if (item is FolderItem fi && fi.RelativePath == draggedPath)
+                        {
+                            draggedFolder = fi;
+                            break;
+                        }
+                    }
+                    if (draggedFolder != null)
+                    {
+                        string targetRelPath = (targetFolder == null) ? "[Все демки]" : targetFolder.RelativePath;
+                        MoveFolder(draggedFolder, targetRelPath);
+                    }
                 }
             }
         }
@@ -627,12 +639,19 @@ namespace FaceitDemoManager
                 if (Math.Abs(position.X - folderDragStartPoint.X) > SystemParameters.MinimumHorizontalDragDistance ||
                     Math.Abs(position.Y - folderDragStartPoint.Y) > SystemParameters.MinimumVerticalDragDistance)
                 {
-                    if (lstFolders.SelectedItem is FolderItem selectedFolderItem)
+                    // Find the ListBoxItem under the mouse dynamically to bypass selection delay
+                    DependencyObject k = e.OriginalSource as DependencyObject;
+                    while (k != null && !(k is ListBoxItem))
+                    {
+                        k = VisualTreeHelper.GetParent(k);
+                    }
+
+                    if (k is ListBoxItem listBoxItem && listBoxItem.DataContext is FolderItem selectedFolderItem)
                     {
                         if (selectedFolderItem.RelativePath == "[Все демки]" || selectedFolderItem.RelativePath == "General")
                             return;
 
-                        DataObject data = new DataObject("FolderItem", selectedFolderItem);
+                        DataObject data = new DataObject("FolderItemPath", selectedFolderItem.RelativePath);
                         DragDrop.DoDragDrop(lstFolders, data, DragDropEffects.Move);
                     }
                 }

@@ -492,7 +492,7 @@ namespace FaceitDemoManager
                                         <RowDefinition Height=""Auto""/>
                                     </Grid.RowDefinitions>
                                     
-                                    <ListBox Name=""LstFolders"" DisplayMemberPath=""DisplayName"" Grid.Row=""0"" Background=""Transparent"" BorderThickness=""0"" ScrollViewer.HorizontalScrollBarVisibility=""Disabled"">
+                                    <ListBox Name=""LstFolders"" DisplayMemberPath=""DisplayName"" AllowDrop=""True"" Grid.Row=""0"" Background=""Transparent"" BorderThickness=""0"" ScrollViewer.HorizontalScrollBarVisibility=""Disabled"">
                                         <ListBox.ItemContainerStyle>
                                             <Style TargetType=""ListBoxItem"">
                                                 <Setter Property=""Foreground"" Value=""Gray""/>
