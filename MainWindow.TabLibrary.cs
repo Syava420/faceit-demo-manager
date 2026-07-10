@@ -579,9 +579,16 @@ namespace FaceitDemoManager
             
             if (targetFolder == null)
             {
-                // If dropped directly on empty ListBox space, fallback to hovered item
-                ListBoxItem item = lstFolders.InputHitTest(e.GetPosition(lstFolders)) as ListBoxItem;
-                if (item != null) targetFolder = item.DataContext as FolderItem;
+                // Fallback to hit-testing at the drop position, walking up to ListBoxItem container
+                DependencyObject hit = lstFolders.InputHitTest(e.GetPosition(lstFolders)) as DependencyObject;
+                while (hit != null && !(hit is ListBoxItem))
+                {
+                    hit = VisualTreeHelper.GetParent(hit);
+                }
+                if (hit is ListBoxItem listBoxItem)
+                {
+                    targetFolder = listBoxItem.DataContext as FolderItem;
+                }
             }
 
             if (e.Data.GetDataPresent("DemoGridRows"))
@@ -639,22 +646,83 @@ namespace FaceitDemoManager
                 if (Math.Abs(position.X - folderDragStartPoint.X) > SystemParameters.MinimumHorizontalDragDistance ||
                     Math.Abs(position.Y - folderDragStartPoint.Y) > SystemParameters.MinimumVerticalDragDistance)
                 {
-                    // Find the ListBoxItem under the mouse dynamically to bypass selection delay
+                    FolderItem draggedFolder = null;
+
+                    // 1. Try to find the item under the mouse dynamically
                     DependencyObject k = e.OriginalSource as DependencyObject;
                     while (k != null && !(k is ListBoxItem))
                     {
                         k = VisualTreeHelper.GetParent(k);
                     }
 
-                    if (k is ListBoxItem listBoxItem && listBoxItem.DataContext is FolderItem selectedFolderItem)
+                    if (k is ListBoxItem listBoxItem && listBoxItem.DataContext is FolderItem fi)
                     {
-                        if (selectedFolderItem.RelativePath == "[Все демки]" || selectedFolderItem.RelativePath == "General")
+                        draggedFolder = fi;
+                    }
+
+                    // 2. Fallback to selected item if tree walk failed
+                    if (draggedFolder == null)
+                    {
+                        draggedFolder = lstFolders.SelectedItem as FolderItem;
+                    }
+
+                    if (draggedFolder != null)
+                    {
+                        if (draggedFolder.RelativePath == "[Все демки]" || draggedFolder.RelativePath == "General")
                             return;
 
-                        DataObject data = new DataObject("FolderItemPath", selectedFolderItem.RelativePath);
+                        DataObject data = new DataObject("FolderItemPath", draggedFolder.RelativePath);
                         DragDrop.DoDragDrop(lstFolders, data, DragDropEffects.Move);
                     }
                 }
+            }
+        }
+
+        private void LstFolders_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            DependencyObject k = e.OriginalSource as DependencyObject;
+            while (k != null && !(k is ListBoxItem))
+            {
+                k = VisualTreeHelper.GetParent(k);
+            }
+
+            if (k is ListBoxItem listBoxItem && listBoxItem.DataContext is FolderItem folderItem)
+            {
+                lstFolders.SelectedItem = folderItem;
+
+                ContextMenu menu = new ContextMenu();
+                menu.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#18181b"));
+                menu.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#27272a"));
+                menu.Foreground = Brushes.White;
+
+                MenuItem createItem = new MenuItem { Header = "Создать подпапку", Foreground = Brushes.White };
+                createItem.Click += (s, ev) => BtnNewCategory_Click(null, null);
+
+                MenuItem deleteItem = new MenuItem { Header = "Удалить папку", Foreground = Brushes.White };
+                deleteItem.Click += (s, ev) => BtnDeleteCategory_Click(null, null);
+
+                if (folderItem.RelativePath == "[Все демки]" || folderItem.RelativePath == "General")
+                {
+                    deleteItem.IsEnabled = false;
+                }
+
+                menu.Items.Add(createItem);
+                menu.Items.Add(deleteItem);
+
+                listBoxItem.ContextMenu = menu;
+            }
+            else
+            {
+                ContextMenu menu = new ContextMenu();
+                menu.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#18181b"));
+                menu.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#27272a"));
+                menu.Foreground = Brushes.White;
+
+                MenuItem createItem = new MenuItem { Header = "Создать папку", Foreground = Brushes.White };
+                createItem.Click += (s, ev) => BtnNewCategory_Click(null, null);
+
+                menu.Items.Add(createItem);
+                lstFolders.ContextMenu = menu;
             }
         }
 

@@ -299,6 +299,7 @@ namespace FaceitDemoManager
             lstFolders.Drop += LstFolders_Drop;
             lstFolders.PreviewMouseLeftButtonDown += LstFolders_PreviewMouseLeftButtonDown;
             lstFolders.MouseMove += LstFolders_MouseMove;
+            lstFolders.ContextMenuOpening += LstFolders_ContextMenuOpening;
         }
 
         private void SwitchTab(int tabIndex)
