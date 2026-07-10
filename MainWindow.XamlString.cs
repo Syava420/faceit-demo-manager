@@ -529,8 +529,53 @@ namespace FaceitDemoManager
                             <TextBlock Text=""FACEIT Demo Hub"" Foreground=""#a78bfa"" FontWeight=""Bold"" FontSize=""15""/>
                         </StackPanel>
                         <StackPanel Grid.Column=""1"" Orientation=""Horizontal"" Margin=""0,0,10,0"" VerticalAlignment=""Center"">
-                            <Button Name=""BtnMinimize"" Content=""—"" Width=""30"" Height=""25"" Background=""Transparent"" Foreground=""Gray"" BorderThickness=""0"" Cursor=""Hand"" Margin=""0,0,5,0""/>
-                            <Button Name=""BtnClose"" Content=""✕"" Width=""30"" Height=""25"" Background=""Transparent"" Foreground=""Gray"" BorderThickness=""0"" Cursor=""Hand""/>
+                            <Button Name=""BtnMinimize"" Width=""35"" Height=""30"" Cursor=""Hand"" Margin=""0,0,2,0"">
+                                <Button.Template>
+                                    <ControlTemplate TargetType=""Button"">
+                                        <Border Name=""bg"" Background=""Transparent"" CornerRadius=""4"" SnapsToDevicePixels=""True"">
+                                            <Path Data=""M0,0 L12,0"" Stroke=""{TemplateBinding Foreground}"" StrokeThickness=""1.5"" HorizontalAlignment=""Center"" VerticalAlignment=""Center""/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property=""IsMouseOver"" Value=""True"">
+                                                <Setter TargetName=""bg"" Property=""Background"" Value=""#27272a""/>
+                                                <Setter Property=""Foreground"" Value=""#a78bfa""/>
+                                            </Trigger>
+                                            <Trigger Property=""IsPressed"" Value=""True"">
+                                                <Setter TargetName=""bg"" Property=""Background"" Value=""#1f1f23""/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <Button.Style>
+                                    <Style TargetType=""Button"">
+                                        <Setter Property=""Foreground"" Value=""#71717a""/>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            
+                            <Button Name=""BtnClose"" Width=""35"" Height=""30"" Cursor=""Hand"">
+                                <Button.Template>
+                                    <ControlTemplate TargetType=""Button"">
+                                        <Border Name=""bg"" Background=""Transparent"" CornerRadius=""4"" SnapsToDevicePixels=""True"">
+                                            <Path Data=""M0,0 L10,10 M0,10 L10,0"" Stroke=""{TemplateBinding Foreground}"" StrokeThickness=""1.5"" HorizontalAlignment=""Center"" VerticalAlignment=""Center""/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property=""IsMouseOver"" Value=""True"">
+                                                <Setter TargetName=""bg"" Property=""Background"" Value=""#ef4444""/>
+                                                <Setter Property=""Foreground"" Value=""White""/>
+                                            </Trigger>
+                                            <Trigger Property=""IsPressed"" Value=""True"">
+                                                <Setter TargetName=""bg"" Property=""Background"" Value=""#b91c1c""/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <Button.Style>
+                                    <Style TargetType=""Button"">
+                                        <Setter Property=""Foreground"" Value=""#71717a""/>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
                         </StackPanel>
                     </Grid>
                     
@@ -638,6 +683,7 @@ namespace FaceitDemoManager
                                         <RowDefinition Height=""200""/>
                                         <RowDefinition Height=""25""/>
                                         <RowDefinition Height=""*""/>
+                                        <RowDefinition Height=""Auto""/>
                                     </Grid.RowDefinitions>
                                     
                                     <Border Name=""DragDropZone"" Grid.Row=""0"" AllowDrop=""True"" BorderBrush=""#8b5cf6"" BorderThickness=""2"" CornerRadius=""15"" Background=""#18181b"" Cursor=""Hand"">
@@ -648,18 +694,13 @@ namespace FaceitDemoManager
                                         </StackPanel>
                                     </Border>
                                     
-                                    <Grid Grid.Row=""1"" Margin=""0,0,0,4"">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width=""*""/>
-                                            <ColumnDefinition Width=""Auto""/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text=""КОНСОЛЬ ЛОГОВ (процесс распаковки)"" Foreground=""#71717a"" FontSize=""10"" FontWeight=""Bold"" VerticalAlignment=""Bottom""/>
-                                        <Button Name=""BtnClearLog"" Grid.Column=""1"" Content=""Очистить"" Style=""{StaticResource ModernBtn}"" Height=""20"" FontSize=""10"" Padding=""10,0"" VerticalAlignment=""Bottom""/>
-                                    </Grid>
+                                    <TextBlock Grid.Row=""1"" Text=""КОНСОЛЬ ЛОГОВ (процесс распаковки)"" Foreground=""#71717a"" FontSize=""10"" FontWeight=""Bold"" VerticalAlignment=""Bottom"" Margin=""0,0,0,4""/>
                                     
                                     <Border Grid.Row=""2"" Background=""#0b0b0d"" BorderBrush=""#27272a"" BorderThickness=""1"" CornerRadius=""12"" Padding=""10"">
                                         <TextBox Name=""TxtLogConsole"" Background=""Transparent"" Foreground=""#10b981"" FontFamily=""Consolas"" BorderThickness=""0"" VerticalScrollBarVisibility=""Auto"" IsReadOnly=""True"" AcceptsReturn=""True"" TextWrapping=""Wrap""/>
                                     </Border>
+                                    
+                                    <Button Name=""BtnClearLog"" Grid.Row=""3"" Content=""Очистить логи"" Style=""{StaticResource ModernBtn}"" Height=""32"" Margin=""0,12,0,0""/>
                                 </Grid>
                                 
                                 <!-- Right Column of Tab 1: Paths & Mode settings -->
