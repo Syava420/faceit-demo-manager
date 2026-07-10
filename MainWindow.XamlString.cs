@@ -291,6 +291,39 @@ namespace FaceitDemoManager
                             </Setter.Value>
                         </Setter>
                     </Style>
+                    <Style TargetType=""ScrollViewer"">
+                        <Setter Property=""Template"">
+                            <Setter.Value>
+                                <ControlTemplate TargetType=""ScrollViewer"">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width=""*""/>
+                                            <ColumnDefinition Width=""Auto""/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height=""*""/>
+                                            <RowDefinition Height=""Auto""/>
+                                        </Grid.RowDefinitions>
+                                        <ScrollContentPresenter x:Name=""PART_ScrollContentPresenter"" Grid.Column=""0"" Grid.Row=""0"" Content=""{TemplateBinding Content}"" ContentTemplate=""{TemplateBinding ContentTemplate}"" CanContentScroll=""{TemplateBinding CanContentScroll}"" Margin=""{TemplateBinding Padding}""/>
+                                        <ScrollBar x:Name=""PART_VerticalScrollBar"" Grid.Column=""1"" Grid.Row=""0""
+                                                   Value=""{TemplateBinding VerticalOffset}""
+                                                   Maximum=""{TemplateBinding ScrollableHeight}""
+                                                   ViewportSize=""{TemplateBinding ViewportHeight}""
+                                                   Visibility=""{TemplateBinding ComputedVerticalScrollBarVisibility}""
+                                                   Orientation=""Vertical""
+                                                   Width=""6""/>
+                                        <ScrollBar x:Name=""PART_HorizontalScrollBar"" Grid.Column=""0"" Grid.Row=""1""
+                                                   Value=""{TemplateBinding HorizontalOffset}""
+                                                   Maximum=""{TemplateBinding ScrollableWidth}""
+                                                   ViewportSize=""{TemplateBinding ViewportWidth}""
+                                                   Visibility=""{TemplateBinding ComputedHorizontalScrollBarVisibility}""
+                                                   Orientation=""Horizontal""
+                                                   Height=""6""/>
+                                    </Grid>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
                     <Style TargetType=""TextBox"">
                         <Setter Property=""Background"" Value=""#27272a""/>
                         <Setter Property=""Foreground"" Value=""White""/>
@@ -536,42 +569,6 @@ namespace FaceitDemoManager
                                     </Grid.RowDefinitions>
                                     
                                     <ListBox Name=""LstFolders"" DisplayMemberPath=""DisplayName"" AllowDrop=""True"" Grid.Row=""0"" Background=""Transparent"" BorderThickness=""0"" ScrollViewer.HorizontalScrollBarVisibility=""Disabled"">
-                                        <ListBox.Resources>
-                                            <Style TargetType=""ScrollBar"">
-                                                <Setter Property=""Width"" Value=""5""/>
-                                                <Setter Property=""MinHeight"" Value=""10""/>
-                                                <Setter Property=""Background"" Value=""Transparent""/>
-                                                <Setter Property=""Template"">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType=""ScrollBar"">
-                                                            <Grid x:Name=""Bg"" Background=""Transparent"">
-                                                                <Track x:Name=""PART_Track"" IsDirectionReversed=""true"">
-                                                                    <Track.Thumb>
-                                                                        <Thumb x:Name=""PART_Thumb"" Background=""#3f3f46"">
-                                                                            <Thumb.Template>
-                                                                                <ControlTemplate TargetType=""Thumb"">
-                                                                                    <Border Background=""{TemplateBinding Background}"" CornerRadius=""2""/>
-                                                                                </ControlTemplate>
-                                                                            </Thumb.Template>
-                                                                        </Thumb>
-                                                                    </Track.Thumb>
-                                                                </Track>
-                                                            </Grid>
-                                                            <ControlTemplate.Triggers>
-                                                                <Trigger Property=""Orientation"" Value=""Horizontal"">
-                                                                    <Setter Property=""Width"" Value=""Auto""/>
-                                                                    <Setter Property=""Height"" Value=""5""/>
-                                                                    <Setter TargetName=""PART_Track"" Property=""IsDirectionReversed"" Value=""False""/>
-                                                                </Trigger>
-                                                                <Trigger Property=""IsMouseOver"" Value=""True"">
-                                                                    <Setter TargetName=""PART_Thumb"" Property=""Background"" Value=""#52525b""/>
-                                                                </Trigger>
-                                                            </ControlTemplate.Triggers>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </ListBox.Resources>
                                         <ListBox.ItemContainerStyle>
                                             <Style TargetType=""ListBoxItem"">
                                                 <Setter Property=""Foreground"" Value=""Gray""/>
@@ -610,8 +607,8 @@ namespace FaceitDemoManager
                                             <ColumnDefinition Width=""8""/>
                                             <ColumnDefinition Width=""*""/>
                                         </Grid.ColumnDefinitions>
-                                        <Button Name=""BtnNewCategory"" Grid.Column=""0"" Content=""+ Папка"" Style=""{StaticResource ModernBtn}"" Background=""#27272a"" Foreground=""White"" Height=""32""/>
-                                        <Button Name=""BtnDeleteCategory"" Grid.Column=""2"" Content=""- Папка"" Style=""{StaticResource RedBtn}"" Height=""32""/>
+                                        <Button Name=""BtnNewCategory"" Grid.Column=""0"" Content=""Добавить"" Style=""{StaticResource ModernBtn}"" Height=""32""/>
+                                        <Button Name=""BtnDeleteCategory"" Grid.Column=""2"" Content=""Удалить"" Style=""{StaticResource ModernBtn}"" Height=""32""/>
                                     </Grid>
                                 </Grid>
                             </Grid>
@@ -695,7 +692,7 @@ namespace FaceitDemoManager
                                         </StackPanel>
                                     </Border>
                                     
-                                    <Button Name=""BtnProcess"" Grid.Row=""1"" Content=""Запустить ручное сканирование"" Style=""{StaticResource GreenBtn}"" Height=""35"" Margin=""0,15,0,0""/>
+                                     <Button Name=""BtnProcess"" Grid.Row=""1"" Content=""Запустить ручное сканирование"" Style=""{StaticResource ModernBtn}"" Height=""35"" Margin=""0,15,0,0""/>
                                 </Grid>
                             </Grid>
                             
@@ -719,9 +716,9 @@ namespace FaceitDemoManager
                                     <TextBox Name=""TxtSearch"" Grid.Column=""0"" Style=""{StaticResource SearchTextBox}"" Width=""220"" Height=""32"" HorizontalAlignment=""Left"" VerticalContentAlignment=""Center""/>
                                     
                                     <StackPanel Grid.Column=""2"" Orientation=""Horizontal"">
-                                        <Button Name=""BtnPlay"" Content=""Запустить в CS2"" Style=""{StaticResource GreenBtn}"" Width=""160"" Height=""32"" Margin=""0,0,8,0""/>
+                                        <Button Name=""BtnPlay"" Content=""Запустить в CS2"" Style=""{StaticResource ModernBtn}"" Width=""160"" Height=""32"" Margin=""0,0,8,0""/>
                                         <Button Name=""BtnMoveDemo"" Content=""Перенести"" Style=""{StaticResource ModernBtn}"" Width=""120"" Height=""32"" Margin=""0,0,8,0""/>
-                                        <Button Name=""BtnDeleteDemo"" Content=""Удалить"" Style=""{StaticResource RedBtn}"" Width=""95"" Height=""32""/>
+                                        <Button Name=""BtnDeleteDemo"" Content=""Удалить"" Style=""{StaticResource ModernBtn}"" Width=""95"" Height=""32""/>
                                     </StackPanel>
                                 </Grid>
 
@@ -966,8 +963,8 @@ namespace FaceitDemoManager
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Orientation=""Horizontal"" VerticalAlignment=""Center"">
                                         <CheckBox Name=""ChkAutoApplyBinds"" Content=""Применять при запуске"" IsChecked=""True"" VerticalAlignment=""Center"" Margin=""0,0,15,0""/>
-                                        <Button Name=""BtnAddBind"" Content=""Добавить бинд"" Style=""{StaticResource ModernBtn}"" Background=""#10b981"" Height=""32"" Padding=""12,0"" Margin=""0,0,8,0""/>
-                                        <Button Name=""BtnDeleteBind"" Content=""Удалить"" Style=""{StaticResource ModernBtn}"" Background=""#ef4444"" Height=""32"" Padding=""12,0""/>
+                                        <Button Name=""BtnAddBind"" Content=""Добавить бинд"" Style=""{StaticResource ModernBtn}"" Height=""32"" Padding=""12,0"" Margin=""0,0,8,0""/>
+                                        <Button Name=""BtnDeleteBind"" Content=""Удалить"" Style=""{StaticResource ModernBtn}"" Height=""32"" Padding=""12,0""/>
                                     </StackPanel>
                                     <Button Name=""BtnResetBinds"" Grid.Column=""1"" Content=""Сбросить по умолчанию"" Style=""{StaticResource ModernBtn}"" Height=""32"" Padding=""15,0""/>
                                 </Grid>
