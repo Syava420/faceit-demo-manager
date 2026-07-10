@@ -676,6 +676,11 @@ namespace FaceitDemoManager
             string folderName = Path.GetFileName(srcPath);
             string destPath = (dest == "[Все демки]" || string.IsNullOrEmpty(dest)) ? Path.Combine(baseDir, folderName) : Path.Combine(baseDir, dest, folderName);
 
+            if (string.Equals(Path.GetFullPath(srcPath), Path.GetFullPath(destPath), StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
             if (Directory.Exists(destPath))
             {
                 ShowMessageDialog("Ошибка", "Папка с таким именем уже существует в месте назначения.", true);
