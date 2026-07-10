@@ -107,6 +107,8 @@ namespace FaceitDemoManager
             this.AllowsTransparency = true;
             this.Background = Brushes.Transparent;
             this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            this.Opacity = 0;
+            this.Loaded += MainWindow_Loaded;
 
             try
             {
@@ -237,8 +239,11 @@ namespace FaceitDemoManager
             ChkWatchFolder.Unchecked += (s, e) => ToggleWatcherSetting(false);
             
             // Voice Setting triggers
-            chkVoiceInDemos.Checked += (s, e) => SaveConfig();
-            chkVoiceInDemos.Unchecked += (s, e) => SaveConfig();
+            if (chkVoiceInDemos != null)
+            {
+                chkVoiceInDemos.Checked += (s, e) => SaveConfig();
+                chkVoiceInDemos.Unchecked += (s, e) => SaveConfig();
+            }
 
             // Auto-apply binds triggers
             chkAutoApplyBinds.Checked += (s, e) => SaveConfig();
@@ -482,7 +487,7 @@ namespace FaceitDemoManager
             
             ChkWatchFolder.IsChecked = settings.WatchFolder;
             ChkTray.IsChecked = settings.MinimizeTray;
-            chkVoiceInDemos.IsChecked = settings.EnableDemoVoice;
+            if (chkVoiceInDemos != null) chkVoiceInDemos.IsChecked = settings.EnableDemoVoice;
             chkAutoApplyBinds.IsChecked = settings.AutoApplyBinds;
 
             dgvBinds.ItemsSource = settings.Binds;
@@ -548,7 +553,7 @@ namespace FaceitDemoManager
 
             settings.WatchFolder = ChkWatchFolder.IsChecked == true;
             settings.MinimizeTray = ChkTray.IsChecked == true;
-            settings.EnableDemoVoice = chkVoiceInDemos.IsChecked == true;
+            if (chkVoiceInDemos != null) settings.EnableDemoVoice = chkVoiceInDemos.IsChecked == true;
             settings.AutoApplyBinds = chkAutoApplyBinds.IsChecked == true;
 
             var selectedItem = (ComboBoxItem)CboImportMode.SelectedItem;
@@ -863,13 +868,26 @@ namespace FaceitDemoManager
             thread.Start();
         }
 
+        private bool isClosingAnimationCompleted = false;
         private void MainWindow_Closing(object sender, CancelEventArgs e)
         {
-            SaveConfig();
-            if (trayIcon != null)
+            if (!isClosingAnimationCompleted)
             {
-                trayIcon.Visible = false;
-                trayIcon.Dispose();
+                e.Cancel = true;
+                SaveConfig();
+                if (trayIcon != null)
+                {
+                    trayIcon.Visible = false;
+                    trayIcon.Dispose();
+                }
+
+                var anim = new System.Windows.Media.Animation.DoubleAnimation(1, 0, new Duration(TimeSpan.FromSeconds(0.2)));
+                anim.Completed += (s, ev) =>
+                {
+                    isClosingAnimationCompleted = true;
+                    this.Close();
+                };
+                this.BeginAnimation(Window.OpacityProperty, anim);
             }
         }
 
@@ -891,6 +909,12 @@ namespace FaceitDemoManager
             this.Dispatcher.BeginInvoke(new Action(() => {
                 prgBar.Value = 0;
             }));
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            var anim = new System.Windows.Media.Animation.DoubleAnimation(0, 1, new Duration(TimeSpan.FromSeconds(0.25)));
+            this.BeginAnimation(Window.OpacityProperty, anim);
         }
     }
 }

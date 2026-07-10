@@ -9,7 +9,14 @@ namespace FaceitDemoManager
         {
             return @"<Border xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
                     xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml""
-                    CornerRadius=""12"" Background=""#121214"" BorderBrush=""#2e2e34"" BorderThickness=""1"">
+                    CornerRadius=""12"" Background=""#121214"" BorderThickness=""1"">
+                <Border.BorderBrush>
+                    <LinearGradientBrush StartPoint=""0,0"" EndPoint=""1,1"">
+                        <GradientStop Color=""#8b5cf6"" Offset=""0.0""/>
+                        <GradientStop Color=""#2e2e34"" Offset=""0.4""/>
+                        <GradientStop Color=""#18181b"" Offset=""1.0""/>
+                    </LinearGradientBrush>
+                </Border.BorderBrush>
                 <Border.Resources>
                     <Style x:Key=""ModernBtn"" TargetType=""Button"">
                         <Setter Property=""Background"" Value=""#7c3aed""/>
@@ -695,7 +702,6 @@ namespace FaceitDemoManager
                                             
                                             <CheckBox Name=""ChkWatchFolder"" Content=""Авто-сканирование загрузок"" Margin=""0,0,0,8""/>
                                             <CheckBox Name=""ChkTray"" Content=""Сворачивать в трей"" Margin=""0,0,0,8""/>
-                                            <CheckBox Name=""ChkVoiceInDemos"" Content=""Включить войс-чат в демках""/>
                                         </StackPanel>
                                     </Border>
                                     
