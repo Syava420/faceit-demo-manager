@@ -633,7 +633,7 @@ namespace FaceitDemoManager
                                         <RowDefinition Height=""*""/>
                                     </Grid.RowDefinitions>
                                     
-                                    <Border Name=""DragDropZone"" Grid.Row=""0"" BorderBrush=""#8b5cf6"" BorderThickness=""2"" CornerRadius=""15"" Background=""#18181b"" Cursor=""Hand"">
+                                    <Border Name=""DragDropZone"" Grid.Row=""0"" AllowDrop=""True"" BorderBrush=""#8b5cf6"" BorderThickness=""2"" CornerRadius=""15"" Background=""#18181b"" Cursor=""Hand"">
                                         <StackPanel VerticalAlignment=""Center"" HorizontalAlignment=""Center"">
                                             <TextBlock Text=""📥"" FontSize=""45"" HorizontalAlignment=""Center"" Foreground=""#8b5cf6"" Margin=""0,0,0,10""/>
                                             <TextBlock Text=""Перетащите сюда демку .dem.zst или .dem"" FontSize=""15"" FontWeight=""Bold"" Foreground=""White"" HorizontalAlignment=""Center""/>
@@ -641,7 +641,14 @@ namespace FaceitDemoManager
                                         </StackPanel>
                                     </Border>
                                     
-                                    <TextBlock Grid.Row=""1"" Text=""КОНСОЛЬ ЛОГОВ (процесс распаковки)"" Foreground=""#71717a"" FontSize=""10"" FontWeight=""Bold"" VerticalAlignment=""Bottom"" Margin=""0,0,0,4""/>
+                                    <Grid Grid.Row=""1"" Margin=""0,0,0,4"">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width=""*""/>
+                                            <ColumnDefinition Width=""Auto""/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text=""КОНСОЛЬ ЛОГОВ (процесс распаковки)"" Foreground=""#71717a"" FontSize=""10"" FontWeight=""Bold"" VerticalAlignment=""Bottom""/>
+                                        <Button Name=""BtnClearLog"" Grid.Column=""1"" Content=""Очистить"" Style=""{StaticResource ModernBtn}"" Height=""20"" FontSize=""10"" Padding=""10,0"" VerticalAlignment=""Bottom""/>
+                                    </Grid>
                                     
                                     <Border Grid.Row=""2"" Background=""#0b0b0d"" BorderBrush=""#27272a"" BorderThickness=""1"" CornerRadius=""12"" Padding=""10"">
                                         <TextBox Name=""TxtLogConsole"" Background=""Transparent"" Foreground=""#10b981"" FontFamily=""Consolas"" BorderThickness=""0"" VerticalScrollBarVisibility=""Auto"" IsReadOnly=""True"" AcceptsReturn=""True"" TextWrapping=""Wrap""/>

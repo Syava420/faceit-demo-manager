@@ -38,6 +38,7 @@ namespace FaceitDemoManager
         private Button btnAutoCS2;
         private Button btnBrowseCS2;
         private Button btnProcess;
+        private Button btnClearLog;
 
         // Tab 2: Library Controls
         private Grid gridLibraryTab;
@@ -142,6 +143,7 @@ namespace FaceitDemoManager
             btnAutoCS2 = (Button)root.FindName("BtnAutoCS2");
             btnBrowseCS2 = (Button)root.FindName("BtnBrowseCS2");
             btnProcess = (Button)root.FindName("BtnProcess");
+            btnClearLog = (Button)root.FindName("BtnClearLog");
 
             gridLibraryTab = (Grid)root.FindName("GridLibraryTab");
             lstFolders = (ListBox)root.FindName("LstFolders");
@@ -215,12 +217,22 @@ namespace FaceitDemoManager
             };
 
             // Drag and Drop
+            dragDropZone.AllowDrop = true;
             dragDropZone.Drop += MainWindow_Drop;
-            dragDropZone.DragOver += (s, e) => e.Effects = DragDropEffects.Copy;
+            dragDropZone.DragOver += (s, e) => {
+                e.Effects = DragDropEffects.Copy;
+                e.Handled = true;
+            };
             dragDropZone.MouseLeftButtonDown += DragDropZone_MouseLeftButtonDown;
 
             // Scan / Watcher triggers
             btnProcess.Click += BtnProcess_Click;
+            if (btnClearLog != null)
+            {
+                btnClearLog.Click += (s, e) => {
+                    if (txtLogConsole != null) txtLogConsole.Clear();
+                };
+            }
             ChkWatchFolder.Checked += (s, e) => ToggleWatcherSetting(true);
             ChkWatchFolder.Unchecked += (s, e) => ToggleWatcherSetting(false);
             
