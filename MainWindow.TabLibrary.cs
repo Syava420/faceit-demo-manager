@@ -18,7 +18,7 @@ namespace FaceitDemoManager
             string selected = lstFolders.SelectedItem != null ? lstFolders.SelectedItem.ToString() : null;
 
             lstFolders.Items.Clear();
-            lstFolders.Items.Add("[Все демки]");
+            lstFolders.Items.Add(new FolderItem { DisplayName = "[Все демки]", RelativePath = "[Все демки]", Depth = 0 });
             
             string baseDir = GetDemosBaseDir();
             if (Directory.Exists(baseDir))
@@ -29,20 +29,70 @@ namespace FaceitDemoManager
                     try { Directory.CreateDirectory(genDir); } catch { }
                 }
 
-                foreach (string d in Directory.GetDirectories(baseDir))
+                List<FolderItem> folderItems = new List<FolderItem>();
+                LoadSubfoldersRecursive(baseDir, "", 0, folderItems);
+                foreach (var item in folderItems)
                 {
-                    string name = Path.GetFileName(d);
-                    lstFolders.Items.Add(name);
+                    lstFolders.Items.Add(item);
                 }
             }
 
-            if (selected != null && lstFolders.Items.Contains(selected))
+            if (selected != null)
             {
-                lstFolders.SelectedItem = selected;
+                bool found = false;
+                foreach (var item in lstFolders.Items)
+                {
+                    if (item is FolderItem fi && fi.RelativePath == selected)
+                    {
+                        lstFolders.SelectedItem = fi;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) lstFolders.SelectedIndex = 0;
             }
             else
             {
                 lstFolders.SelectedIndex = 0;
+            }
+        }
+
+        private void LoadSubfoldersRecursive(string baseDir, string relativePath, int depth, List<FolderItem> result)
+        {
+            string currentFullDir = string.IsNullOrEmpty(relativePath) ? baseDir : Path.Combine(baseDir, relativePath);
+            if (!Directory.Exists(currentFullDir)) return;
+
+            string[] subdirs;
+            try
+            {
+                subdirs = Directory.GetDirectories(currentFullDir);
+            }
+            catch
+            {
+                return;
+            }
+
+            Array.Sort(subdirs);
+
+            foreach (string subdir in subdirs)
+            {
+                string dirName = Path.GetFileName(subdir);
+                string subRelPath = string.IsNullOrEmpty(relativePath) ? dirName : relativePath + "/" + dirName;
+                
+                string prefix = "";
+                if (depth > 0)
+                {
+                    prefix = new string(' ', (depth - 1) * 4) + "└─ ";
+                }
+                
+                result.Add(new FolderItem 
+                { 
+                    DisplayName = prefix + dirName, 
+                    RelativePath = subRelPath, 
+                    Depth = depth 
+                });
+
+                LoadSubfoldersRecursive(baseDir, subRelPath, depth + 1, result);
             }
         }
 
@@ -56,13 +106,13 @@ namespace FaceitDemoManager
             string baseDir = GetDemosBaseDir();
             if (Directory.Exists(baseDir))
             {
-                string[] subdirs = Directory.GetDirectories(baseDir);
-                foreach (string subdir in subdirs)
+                List<FolderItem> folderItems = new List<FolderItem>();
+                LoadSubfoldersRecursive(baseDir, "", 0, folderItems);
+                foreach (var item in folderItems)
                 {
-                    string name = Path.GetFileName(subdir);
-                    if (!name.Equals("General", StringComparison.OrdinalIgnoreCase))
+                    if (!item.RelativePath.Equals("General", StringComparison.OrdinalIgnoreCase))
                     {
-                        CboImportFolder.Items.Add(name);
+                        CboImportFolder.Items.Add(item.RelativePath);
                     }
                 }
             }
@@ -370,7 +420,19 @@ namespace FaceitDemoManager
 
         private void BtnNewCategory_Click(object sender, RoutedEventArgs e)
         {
-            string input = ShowInputDialog("Новая папка", "Введите имя новой папки:");
+            string current = lstFolders.SelectedItem != null ? lstFolders.SelectedItem.ToString() : null;
+            bool isSubfolder = false;
+            string parentPath = "";
+            string prompt = "Введите имя новой папки:";
+            
+            if (!string.IsNullOrEmpty(current) && current != "[Все демки]" && current != "General")
+            {
+                parentPath = current;
+                isSubfolder = true;
+                prompt = string.Format("Создание подпапки в '{0}'.\nВведите имя новой папки:", current);
+            }
+            
+            string input = ShowInputDialog(isSubfolder ? "Новая подпапка" : "Новая папка", prompt);
             if (string.IsNullOrEmpty(input)) return;
 
             string name = Regex.Replace(input, @"[\\/:*?""<>|]", "").Trim();
@@ -383,13 +445,23 @@ namespace FaceitDemoManager
                 return;
             }
 
-            string targetDir = Path.Combine(baseDir, name);
+            string relativePath = isSubfolder ? parentPath + "/" + name : name;
+            string targetDir = Path.Combine(baseDir, relativePath);
             try
             {
                 Directory.CreateDirectory(targetDir);
                 RefreshFolders();
                 UpdateImportFolderCombobox();
-                lstFolders.SelectedItem = name;
+                
+                // Select the newly created folder
+                foreach (var item in lstFolders.Items)
+                {
+                    if (item is FolderItem fi && fi.RelativePath == relativePath)
+                    {
+                        lstFolders.SelectedItem = fi;
+                        break;
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -406,7 +478,7 @@ namespace FaceitDemoManager
                 return;
             }
 
-            bool mr = ShowConfirmDialog("Удалить папку", string.Format("Вы действительно хотите удалить папку '{0}'? Демки внутри нее останутся на диске.", current));
+            bool mr = ShowConfirmDialog("Удалить папку", string.Format("Вы действительно хотите удалить папку '{0}' и её подпапки? Демки внутри останутся на диске.", current));
             if (!mr) return;
 
             string baseDir = GetDemosBaseDir();
@@ -418,19 +490,19 @@ namespace FaceitDemoManager
                 if (Directory.Exists(targetDir))
                 {
                     // Move files to General folder to avoid deleting demos
-                    foreach (string file in Directory.GetFiles(targetDir, "*.dem"))
+                    foreach (string file in Directory.GetFiles(targetDir, "*.dem", SearchOption.AllDirectories))
                     {
                         string dest = Path.Combine(genDir, Path.GetFileName(file));
                         if (File.Exists(dest)) File.Delete(dest);
                         File.Move(file, dest);
                         
                         // Update metadata path
-                        string oldRel = current + "/" + Path.GetFileName(file);
+                        string relPath = file.Substring(baseDir.Length).TrimStart('\\', '/').Replace('\\', '/');
                         string newRel = "General/" + Path.GetFileName(file);
                         DemoMetadata dm;
-                        if (metadataDb.TryGetValue(oldRel, out dm))
+                        if (metadataDb.TryGetValue(relPath, out dm))
                         {
-                            metadataDb.Remove(oldRel);
+                            metadataDb.Remove(relPath);
                             DemoProcessor.SaveMetadataForDemo(baseDir, metadataDb, newRel, dm);
                         }
                     }
@@ -477,7 +549,7 @@ namespace FaceitDemoManager
 
         private void LstFolders_DragOver(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent("DemoGridRows"))
+            if (e.Data.GetDataPresent("DemoGridRows") || e.Data.GetDataPresent("FolderItem"))
             {
                 e.Effects = DragDropEffects.Move;
             }
@@ -490,33 +562,34 @@ namespace FaceitDemoManager
 
         private void LstFolders_Drop(object sender, DragEventArgs e)
         {
+            var targetItem = e.Source as FrameworkElement;
+            FolderItem targetFolder = null;
+            
+            // Traverse visual tree to find ListBoxItem
+            DependencyObject parent = targetItem;
+            while (parent != null && !(parent is ListBoxItem))
+            {
+                parent = VisualTreeHelper.GetParent(parent);
+            }
+            
+            if (parent is ListBoxItem)
+            {
+                targetFolder = ((ListBoxItem)parent).DataContext as FolderItem;
+            }
+            
+            if (targetFolder == null)
+            {
+                // If dropped directly on empty ListBox space, fallback to hovered item
+                ListBoxItem item = lstFolders.InputHitTest(e.GetPosition(lstFolders)) as ListBoxItem;
+                if (item != null) targetFolder = item.DataContext as FolderItem;
+            }
+
             if (e.Data.GetDataPresent("DemoGridRows"))
             {
-                var targetItem = e.Source as FrameworkElement;
-                string targetFolder = null;
-                
-                // Traverse visual tree to find ListBoxItem
-                DependencyObject parent = targetItem;
-                while (parent != null && !(parent is ListBoxItem))
+                if (targetFolder != null)
                 {
-                    parent = VisualTreeHelper.GetParent(parent);
-                }
-                
-                if (parent is ListBoxItem)
-                {
-                    targetFolder = ((ListBoxItem)parent).DataContext as string;
-                }
-                
-                if (string.IsNullOrEmpty(targetFolder))
-                {
-                    // If dropped directly on empty ListBox space, fallback to hovered item
-                    ListBoxItem item = lstFolders.InputHitTest(e.GetPosition(lstFolders)) as ListBoxItem;
-                    if (item != null) targetFolder = item.DataContext as string;
-                }
-                
-                if (!string.IsNullOrEmpty(targetFolder))
-                {
-                    if (targetFolder == "[Все демки]")
+                    string targetFolderRelPath = targetFolder.RelativePath;
+                    if (targetFolderRelPath == "[Все демки]")
                     {
                         ShowMessageDialog("Предупреждение", "Демки нельзя перетащить в общую категорию всех демок.", true);
                         return;
@@ -525,10 +598,171 @@ namespace FaceitDemoManager
                     var rows = e.Data.GetData("DemoGridRows") as List<DemoGridRow>;
                     if (rows != null && rows.Count > 0)
                     {
-                        MoveSelectedDemos(rows, targetFolder);
+                        MoveSelectedDemos(rows, targetFolderRelPath);
                     }
                 }
             }
+            else if (e.Data.GetDataPresent("FolderItem"))
+            {
+                var draggedFolder = e.Data.GetData("FolderItem") as FolderItem;
+                if (draggedFolder != null)
+                {
+                    string targetRelPath = (targetFolder == null) ? "[Все демки]" : targetFolder.RelativePath;
+                    MoveFolder(draggedFolder, targetRelPath);
+                }
+            }
+        }
+
+        private Point folderDragStartPoint;
+        private void LstFolders_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            folderDragStartPoint = e.GetPosition(null);
+        }
+
+        private void LstFolders_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                Point position = e.GetPosition(null);
+                if (Math.Abs(position.X - folderDragStartPoint.X) > SystemParameters.MinimumHorizontalDragDistance ||
+                    Math.Abs(position.Y - folderDragStartPoint.Y) > SystemParameters.MinimumVerticalDragDistance)
+                {
+                    if (lstFolders.SelectedItem is FolderItem selectedFolderItem)
+                    {
+                        if (selectedFolderItem.RelativePath == "[Все демки]" || selectedFolderItem.RelativePath == "General")
+                            return;
+
+                        DataObject data = new DataObject("FolderItem", selectedFolderItem);
+                        DragDrop.DoDragDrop(lstFolders, data, DragDropEffects.Move);
+                    }
+                }
+            }
+        }
+
+        private void MoveFolder(FolderItem src, string dest)
+        {
+            if (src.RelativePath == dest) return;
+
+            // Prevent circular moving
+            if (dest.StartsWith(src.RelativePath + "/", StringComparison.OrdinalIgnoreCase) || dest.Equals(src.RelativePath, StringComparison.OrdinalIgnoreCase))
+            {
+                ShowMessageDialog("Предупреждение", "Нельзя переместить папку саму в себя или в свои подпапки.", true);
+                return;
+            }
+
+            string baseDir = GetDemosBaseDir();
+            if (string.IsNullOrEmpty(baseDir)) return;
+
+            string srcPath = Path.Combine(baseDir, src.RelativePath);
+            string folderName = Path.GetFileName(srcPath);
+            string destPath = (dest == "[Все демки]" || string.IsNullOrEmpty(dest)) ? Path.Combine(baseDir, folderName) : Path.Combine(baseDir, dest, folderName);
+
+            if (Directory.Exists(destPath))
+            {
+                ShowMessageDialog("Ошибка", "Папка с таким именем уже существует в месте назначения.", true);
+                return;
+            }
+
+            try
+            {
+                // Physically move directory
+                Directory.Move(srcPath, destPath);
+
+                // Update metadata relative paths
+                string oldRelPrefix = src.RelativePath + "/";
+                string newRelPrefix = (dest == "[Все демки]" || string.IsNullOrEmpty(dest)) ? folderName + "/" : dest + "/" + folderName + "/";
+
+                List<string> keysToUpdate = new List<string>();
+                foreach (string key in metadataDb.Keys)
+                {
+                    if (key.StartsWith(oldRelPrefix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        keysToUpdate.Add(key);
+                    }
+                }
+
+                foreach (string oldKey in keysToUpdate)
+                {
+                    DemoMetadata dm = metadataDb[oldKey];
+                    metadataDb.Remove(oldKey);
+                    string newKey = newRelPrefix + oldKey.Substring(oldRelPrefix.Length);
+                    metadataDb[newKey] = dm;
+                }
+
+                SaveEntireMetadataDb(baseDir);
+
+                // Update nickname settings if applicable
+                if (settings != null && settings.FolderNicknames != null)
+                {
+                    Dictionary<string, string> updatedNicknames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    
+                    // Copy all unrelated nicknames
+                    foreach (var kvp in settings.FolderNicknames)
+                    {
+                        if (!kvp.Key.Equals(src.RelativePath, StringComparison.OrdinalIgnoreCase) && 
+                            !kvp.Key.StartsWith(oldRelPrefix, StringComparison.OrdinalIgnoreCase))
+                        {
+                            updatedNicknames[kvp.Key] = kvp.Value;
+                        }
+                    }
+
+                    // Rename matching ones
+                    string oldPathSelf = src.RelativePath;
+                    string newPathSelf = (dest == "[Все демки]" || string.IsNullOrEmpty(dest)) ? folderName : dest + "/" + folderName;
+                    
+                    string nick;
+                    if (settings.FolderNicknames.TryGetValue(oldPathSelf, out nick))
+                    {
+                        updatedNicknames[newPathSelf] = nick;
+                    }
+
+                    foreach (var kvp in settings.FolderNicknames)
+                    {
+                        if (kvp.Key.StartsWith(oldRelPrefix, StringComparison.OrdinalIgnoreCase))
+                        {
+                            string newSubKey = newRelPrefix + kvp.Key.Substring(oldRelPrefix.Length);
+                            newSubKey = newSubKey.TrimEnd('/');
+                            updatedNicknames[newSubKey] = kvp.Value;
+                        }
+                    }
+
+                    settings.FolderNicknames = updatedNicknames;
+                    ConfigManager.Save(configPath, settings);
+                }
+
+                RefreshFolders();
+                UpdateImportFolderCombobox();
+
+                // Select the moved folder
+                string finalDestPath = (dest == "[Все демки]" || string.IsNullOrEmpty(dest)) ? folderName : dest + "/" + folderName;
+                foreach (var item in lstFolders.Items)
+                {
+                    if (item is FolderItem fi && fi.RelativePath == finalDestPath)
+                    {
+                        lstFolders.SelectedItem = fi;
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowMessageDialog("Ошибка", "Не удалось переместить папку: " + ex.Message, true);
+            }
+        }
+
+        private void SaveEntireMetadataDb(string baseDir)
+        {
+            try
+            {
+                string path = Path.Combine(baseDir, "metadata.txt");
+                List<string> lines = new List<string>();
+                foreach (var kvp in metadataDb)
+                {
+                    lines.Add(string.Format("{0}|{1}|{2}|{3}|{4}|{5}", kvp.Key, kvp.Value.Map, kvp.Value.Score, kvp.Value.KD, kvp.Value.Date, kvp.Value.Note));
+                }
+                File.WriteAllLines(path, lines);
+            }
+            catch { }
         }
 
         private void MoveSelectedDemos(List<DemoGridRow> rows, string targetFolder)

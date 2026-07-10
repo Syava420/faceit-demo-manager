@@ -296,6 +296,8 @@ namespace FaceitDemoManager
             dgvDemos.MouseMove += DgvDemos_MouseMove;
             lstFolders.DragOver += LstFolders_DragOver;
             lstFolders.Drop += LstFolders_Drop;
+            lstFolders.PreviewMouseLeftButtonDown += LstFolders_PreviewMouseLeftButtonDown;
+            lstFolders.MouseMove += LstFolders_MouseMove;
         }
 
         private void SwitchTab(int tabIndex)
