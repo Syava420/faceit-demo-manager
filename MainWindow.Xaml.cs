@@ -79,6 +79,7 @@ namespace FaceitDemoManager
         private FileSystemWatcher dlWatcher;
         private System.Windows.Forms.NotifyIcon trayIcon;
         private Dictionary<string, DemoMetadata> metadataDb = new Dictionary<string, DemoMetadata>(StringComparer.OrdinalIgnoreCase);
+        private HashSet<string> collapsedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private bool isUpdatingFields = false;
         private int userLevel = 0;
         private int userElo = 0;
@@ -300,6 +301,7 @@ namespace FaceitDemoManager
             lstFolders.PreviewMouseLeftButtonDown += LstFolders_PreviewMouseLeftButtonDown;
             lstFolders.MouseMove += LstFolders_MouseMove;
             lstFolders.ContextMenuOpening += LstFolders_ContextMenuOpening;
+            lstFolders.MouseDoubleClick += LstFolders_MouseDoubleClick;
         }
 
         private void SwitchTab(int tabIndex)

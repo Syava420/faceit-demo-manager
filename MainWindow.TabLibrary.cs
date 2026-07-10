@@ -79,20 +79,66 @@ namespace FaceitDemoManager
                 string dirName = Path.GetFileName(subdir);
                 string subRelPath = string.IsNullOrEmpty(relativePath) ? dirName : relativePath + "/" + dirName;
                 
+                // Check if this subdirectory itself has subfolders
+                bool hasChildren = false;
+                try
+                {
+                    hasChildren = Directory.GetDirectories(subdir).Length > 0;
+                }
+                catch { }
+
+                // Check if any parent folder of this item is collapsed
+                bool parentCollapsed = false;
+                if (!string.IsNullOrEmpty(relativePath))
+                {
+                    string[] parts = relativePath.Split('/');
+                    string currentParent = "";
+                    foreach (string part in parts)
+                    {
+                        currentParent = string.IsNullOrEmpty(currentParent) ? part : currentParent + "/" + part;
+                        if (collapsedFolders.Contains(currentParent))
+                        {
+                            parentCollapsed = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (parentCollapsed)
+                {
+                    continue; // Skip rendering this item because its parent is collapsed!
+                }
+
+                // Determine expand/collapse symbol
+                string indicator = "";
+                if (hasChildren)
+                {
+                    indicator = collapsedFolders.Contains(subRelPath) ? "▶ " : "▼ ";
+                }
+                else if (depth > 0)
+                {
+                    indicator = "└─ ";
+                }
+
+                // Construct display name with narrower spacing (3 spaces per depth)
                 string prefix = "";
                 if (depth > 0)
                 {
-                    prefix = new string(' ', (depth - 1) * 4) + "└─ ";
+                    prefix = new string(' ', (depth - 1) * 3);
                 }
                 
                 result.Add(new FolderItem 
                 { 
-                    DisplayName = prefix + dirName, 
+                    DisplayName = prefix + indicator + dirName, 
                     RelativePath = subRelPath, 
                     Depth = depth 
                 });
 
-                LoadSubfoldersRecursive(baseDir, subRelPath, depth + 1, result);
+                // Only recurse if this folder itself is NOT collapsed!
+                if (!collapsedFolders.Contains(subRelPath))
+                {
+                    LoadSubfoldersRecursive(baseDir, subRelPath, depth + 1, result);
+                }
             }
         }
 
@@ -723,6 +769,29 @@ namespace FaceitDemoManager
 
                 menu.Items.Add(createItem);
                 lstFolders.ContextMenu = menu;
+            }
+        }
+
+        private void LstFolders_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (lstFolders.SelectedItem is FolderItem fi)
+            {
+                if (fi.RelativePath == "[Все демки]" || fi.RelativePath == "General")
+                    return;
+
+                string fullPath = Path.Combine(GetDemosBaseDir(), fi.RelativePath);
+                if (Directory.Exists(fullPath) && Directory.GetDirectories(fullPath).Length > 0)
+                {
+                    if (collapsedFolders.Contains(fi.RelativePath))
+                    {
+                        collapsedFolders.Remove(fi.RelativePath);
+                    }
+                    else
+                    {
+                        collapsedFolders.Add(fi.RelativePath);
+                    }
+                    RefreshFolders();
+                }
             }
         }
 

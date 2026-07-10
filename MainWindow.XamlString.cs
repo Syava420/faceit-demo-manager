@@ -214,6 +214,49 @@ namespace FaceitDemoManager
                             </Setter.Value>
                         </Setter>
                     </Style>
+                    <Style TargetType=""ContextMenu"">
+                        <Setter Property=""Background"" Value=""#18181b""/>
+                        <Setter Property=""BorderBrush"" Value=""#27272a""/>
+                        <Setter Property=""BorderThickness"" Value=""1""/>
+                        <Setter Property=""Template"">
+                            <Setter.Value>
+                                <ControlTemplate TargetType=""ContextMenu"">
+                                    <Border Background=""{TemplateBinding Background}""
+                                            BorderBrush=""{TemplateBinding BorderBrush}""
+                                            BorderThickness=""{TemplateBinding BorderThickness}""
+                                            CornerRadius=""8""
+                                            Padding=""4"">
+                                        <ItemsPresenter/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                    <Style TargetType=""MenuItem"">
+                        <Setter Property=""Foreground"" Value=""White""/>
+                        <Setter Property=""Background"" Value=""Transparent""/>
+                        <Setter Property=""Padding"" Value=""10,6""/>
+                        <Setter Property=""Template"">
+                            <Setter.Value>
+                                <ControlTemplate TargetType=""MenuItem"">
+                                    <Border Name=""Border"" CornerRadius=""6"" Background=""{TemplateBinding Background}"" Padding=""{TemplateBinding Padding}"">
+                                        <Grid>
+                                            <ContentPresenter ContentSource=""Header"" HorizontalAlignment=""Left"" VerticalAlignment=""Center""/>
+                                        </Grid>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property=""IsMouseOver"" Value=""True"">
+                                            <Setter TargetName=""Border"" Property=""Background"" Value=""#27272a""/>
+                                            <Setter Property=""Foreground"" Value=""#a78bfa""/>
+                                        </Trigger>
+                                        <Trigger Property=""IsEnabled"" Value=""False"">
+                                            <Setter Property=""Foreground"" Value=""#52525b""/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
                     <Style TargetType=""ScrollBar"">
                         <Setter Property=""Width"" Value=""8""/>
                         <Setter Property=""MinHeight"" Value=""10""/>
@@ -493,6 +536,42 @@ namespace FaceitDemoManager
                                     </Grid.RowDefinitions>
                                     
                                     <ListBox Name=""LstFolders"" DisplayMemberPath=""DisplayName"" AllowDrop=""True"" Grid.Row=""0"" Background=""Transparent"" BorderThickness=""0"" ScrollViewer.HorizontalScrollBarVisibility=""Disabled"">
+                                        <ListBox.Resources>
+                                            <Style TargetType=""ScrollBar"">
+                                                <Setter Property=""Width"" Value=""5""/>
+                                                <Setter Property=""MinHeight"" Value=""10""/>
+                                                <Setter Property=""Background"" Value=""Transparent""/>
+                                                <Setter Property=""Template"">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType=""ScrollBar"">
+                                                            <Grid x:Name=""Bg"" Background=""Transparent"">
+                                                                <Track x:Name=""PART_Track"" IsDirectionReversed=""true"">
+                                                                    <Track.Thumb>
+                                                                        <Thumb x:Name=""PART_Thumb"" Background=""#3f3f46"">
+                                                                            <Thumb.Template>
+                                                                                <ControlTemplate TargetType=""Thumb"">
+                                                                                    <Border Background=""{TemplateBinding Background}"" CornerRadius=""2""/>
+                                                                                </ControlTemplate>
+                                                                            </Thumb.Template>
+                                                                        </Thumb>
+                                                                    </Track.Thumb>
+                                                                </Track>
+                                                            </Grid>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property=""Orientation"" Value=""Horizontal"">
+                                                                    <Setter Property=""Width"" Value=""Auto""/>
+                                                                    <Setter Property=""Height"" Value=""5""/>
+                                                                    <Setter TargetName=""PART_Track"" Property=""IsDirectionReversed"" Value=""False""/>
+                                                                </Trigger>
+                                                                <Trigger Property=""IsMouseOver"" Value=""True"">
+                                                                    <Setter TargetName=""PART_Thumb"" Property=""Background"" Value=""#52525b""/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </ListBox.Resources>
                                         <ListBox.ItemContainerStyle>
                                             <Style TargetType=""ListBoxItem"">
                                                 <Setter Property=""Foreground"" Value=""Gray""/>
