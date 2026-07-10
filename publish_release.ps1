@@ -1,4 +1,4 @@
-# Attempt to resolve GitHub Token dynamically from git remote first
+﻿# Attempt to resolve GitHub Token dynamically from git remote first
 $token = $null
 $gitPath = Join-Path $PSScriptRoot "..\git\cmd\git.exe"
 if (-not (Test-Path $gitPath)) {
