@@ -99,235 +99,7 @@ namespace FaceitDemoManager
             FetchUserEloAsync();
         }
 
-        private void InitializeWindow()
-        {
-            this.Title = "FACEIT Demo Hub";
-            this.Width = 1000;
-            this.Height = 650;
-            this.WindowStyle = WindowStyle.None;
-            this.AllowsTransparency = true;
-            this.Background = Brushes.Transparent;
-            this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            this.Opacity = 0;
-            this.Loaded += MainWindow_Loaded;
 
-            try
-            {
-                this.Icon = System.Windows.Media.Imaging.BitmapFrame.Create(new Uri("pack://application:,,,/FaceitDemoManager;component/app.ico", UriKind.RelativeOrAbsolute));
-            }
-            catch (Exception)
-            {
-                // Fallback
-            }
-
-            Border root = (Border)XamlReader.Parse(GetXamlString());
-            this.Content = root;
-
-            // Resolve controls from XAML
-            tabImport = (Button)root.FindName("TabImport");
-            tabLibrary = (Button)root.FindName("TabLibrary");
-            tabBinds = (Button)root.FindName("TabBinds");
-            sidebarLibraryControls = (Grid)root.FindName("SidebarLibraryControls");
-            txtSidebarNick = (TextBox)root.FindName("TxtSidebarNick");
-            lblSidebarNick = (TextBlock)root.FindName("LblSidebarNick");
-
-            gridImportTab = (Grid)root.FindName("GridImportTab");
-            dragDropZone = (Border)root.FindName("DragDropZone");
-            txtLogConsole = (TextBox)root.FindName("TxtLogConsole");
-            txtDownloads = (TextBox)root.FindName("TxtDownloads");
-            txtCS2 = (TextBox)root.FindName("TxtCS2");
-            txtNickname = (TextBox)root.FindName("TxtNickname");
-            ChkWatchFolder = (CheckBox)root.FindName("ChkWatchFolder");
-            ChkTray = (CheckBox)root.FindName("ChkTray");
-            chkVoiceInDemos = (CheckBox)root.FindName("ChkVoiceInDemos");
-            chkDeleteArchives = (CheckBox)root.FindName("ChkDeleteArchives");
-            CboImportMode = (ComboBox)root.FindName("CboImportMode");
-            CboImportFolder = (ComboBox)root.FindName("CboImportFolder");
-            btnBrowseDownloads = (Button)root.FindName("BtnBrowseDownloads");
-            btnAutoCS2 = (Button)root.FindName("BtnAutoCS2");
-            btnBrowseCS2 = (Button)root.FindName("BtnBrowseCS2");
-            btnProcess = (Button)root.FindName("BtnProcess");
-            btnClearLog = (Button)root.FindName("BtnClearLog");
-
-            gridLibraryTab = (Grid)root.FindName("GridLibraryTab");
-            lstFolders = (ListBox)root.FindName("LstFolders");
-            if (lstFolders != null) lstFolders.AllowDrop = true;
-            txtSearch = (TextBox)root.FindName("TxtSearch");
-            dgvDemos = (DataGrid)root.FindName("DgvDemos");
-            pnlMapFilters = (WrapPanel)root.FindName("PnlMapFilters");
-
-            txtEditMap = (TextBox)root.FindName("TxtEditMap");
-            txtEditScore = (TextBox)root.FindName("TxtEditScore");
-            txtEditKD = (TextBox)root.FindName("TxtEditKD");
-            txtEditDate = (TextBox)root.FindName("TxtEditDate");
-            txtNoteEdit = (TextBox)root.FindName("TxtNoteEdit");
-
-            btnNewCategory = (Button)root.FindName("BtnNewCategory");
-            btnDeleteCategory = (Button)root.FindName("BtnDeleteCategory");
-            btnPlay = (Button)root.FindName("BtnPlay");
-            btnMoveDemo = (Button)root.FindName("BtnMoveDemo");
-            btnDeleteDemo = (Button)root.FindName("BtnDeleteDemo");
-
-            gridBindsTab = (Grid)root.FindName("GridBindsTab");
-            dgvBinds = (DataGrid)root.FindName("DgvBinds");
-            chkAutoApplyBinds = (CheckBox)root.FindName("ChkAutoApplyBinds");
-            btnResetBinds = (Button)root.FindName("BtnResetBinds");
-            btnAddBind = (Button)root.FindName("BtnAddBind");
-            btnDeleteBind = (Button)root.FindName("BtnDeleteBind");
-
-            lblStatus = (TextBlock)root.FindName("LblStatus");
-            prgBar = (ProgressBar)root.FindName("PrgBar");
-
-            // Event Bindings
-            this.Closing += MainWindow_Closing;
-            
-            // TitleBar Drag & Double-Click to test error handler
-            Grid titleBar = (Grid)root.FindName("TitleBar");
-            titleBar.MouseLeftButtonDown += (s, e) => {
-                if (e.ClickCount == 2)
-                {
-                    throw new InvalidOperationException("Тестовое исключение для проверки глобального перехватчика ошибок (Global Runtime Error Monitoring)!");
-                }
-                if (e.LeftButton == MouseButtonState.Pressed) this.DragMove();
-            };
-
-            Button btnMin = (Button)root.FindName("BtnMinimize");
-            Button btnClose = (Button)root.FindName("BtnClose");
-            btnMin.Click += (s, e) => this.WindowState = WindowState.Minimized;
-            btnClose.Click += (s, e) => this.Close();
-
-            // Tab Switching
-            tabImport.Click += (s, e) => SwitchTab(0);
-            tabLibrary.Click += (s, e) => SwitchTab(1);
-            tabBinds.Click += (s, e) => SwitchTab(2);
-
-            // Browse Buttons
-            btnBrowseDownloads.Click += (s, e) => BrowseFolder("Выберите папку загрузок", txtDownloads);
-            
-            // CS2 Browse and Auto-detect
-            btnBrowseCS2.Click += (s, e) => BrowseFolder("Выберите папку CS2 (game\\csgo)", txtCS2);
-            btnAutoCS2.Click += (s, e) => {
-                string detected = ConfigManager.AutoDetectCS2Path();
-                if (!string.IsNullOrEmpty(detected))
-                {
-                    txtCS2.Text = detected;
-                    SaveConfig();
-                    ShowMessageDialog("Авто-поиск", "Папка CS2 успешно обнаружена:\n" + detected);
-                }
-                else
-                {
-                    ShowMessageDialog("Авто-поиск", "Не удалось автоматически найти папку CS2. Пожалуйста, укажите её вручную с помощью кнопки '...'.", true);
-                }
-            };
-
-            // Drag and Drop
-            dragDropZone.AllowDrop = true;
-            dragDropZone.Drop += MainWindow_Drop;
-            dragDropZone.DragOver += (s, e) => {
-                e.Effects = DragDropEffects.Copy;
-                e.Handled = true;
-            };
-            dragDropZone.MouseLeftButtonDown += DragDropZone_MouseLeftButtonDown;
-
-            // Scan / Watcher triggers
-            btnProcess.Click += BtnProcess_Click;
-            if (btnClearLog != null)
-            {
-                btnClearLog.Click += (s, e) => {
-                    if (txtLogConsole != null) txtLogConsole.Clear();
-                };
-            }
-            ChkWatchFolder.Checked += (s, e) => ToggleWatcherSetting(true);
-            ChkWatchFolder.Unchecked += (s, e) => ToggleWatcherSetting(false);
-            
-            // Voice Setting triggers
-            if (chkVoiceInDemos != null)
-            {
-                chkVoiceInDemos.Checked += (s, e) => SaveConfig();
-                chkVoiceInDemos.Unchecked += (s, e) => SaveConfig();
-            }
-
-            // Auto-apply binds triggers
-            chkAutoApplyBinds.Checked += (s, e) => SaveConfig();
-            chkAutoApplyBinds.Unchecked += (s, e) => SaveConfig();
-
-            if (chkDeleteArchives != null)
-            {
-                chkDeleteArchives.Checked += (s, e) => SaveConfig();
-                chkDeleteArchives.Unchecked += (s, e) => SaveConfig();
-            }
-
-            // Reset binds button
-            btnResetBinds.Click += BtnResetBinds_Click;
-            btnAddBind.Click += BtnAddBind_Click;
-            btnDeleteBind.Click += BtnDeleteBind_Click;
-            dgvBinds.CellEditEnding += (s, e) => {
-                Dispatcher.BeginInvoke(new Action(() => SaveConfig()), System.Windows.Threading.DispatcherPriority.Background);
-            };
-
-            // Library search & list selection
-            txtSearch.TextChanged += (s, e) => RefreshDemoList();
-            
-            // Setup folder selection text updates contextually
-            lstFolders.SelectionChanged += (s, e) => {
-                UpdateNicknameInput();
-                selectedMapFilter = null;
-                RefreshDemoList();
-            };
-
-            // Nickname commit event handlers
-            txtNickname.KeyDown += (s, e) => {
-                if (e.Key == Key.Enter)
-                {
-                    CommitGlobalNickname();
-                    txtNickname.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
-                    e.Handled = true;
-                }
-            };
-            txtNickname.LostFocus += (s, e) => CommitGlobalNickname();
-
-            if (txtSidebarNick != null)
-            {
-                txtSidebarNick.KeyDown += (s, e) => {
-                    if (e.Key == Key.Enter)
-                    {
-                        CommitSidebarNickname();
-                        txtSidebarNick.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
-                        e.Handled = true;
-                    }
-                };
-                txtSidebarNick.LostFocus += (s, e) => CommitSidebarNickname();
-            }
-
-            btnNewCategory.Click += BtnNewCategory_Click;
-            btnDeleteCategory.Click += BtnDeleteCategory_Click;
-            btnPlay.Click += BtnPlay_Click;
-            btnMoveDemo.Click += BtnMoveDemo_Click;
-            btnDeleteDemo.Click += BtnDeleteDemo_Click;
-
-            dgvDemos.SelectionChanged += DgvDemos_SelectionChanged;
-            txtEditMap.TextChanged += EditField_TextChanged;
-            txtEditScore.TextChanged += EditField_TextChanged;
-            txtEditKD.TextChanged += EditField_TextChanged;
-            txtEditDate.TextChanged += EditField_TextChanged;
-            txtNoteEdit.TextChanged += EditField_TextChanged;
-
-            CboImportMode.SelectionChanged += CboImportMode_SelectionChanged;
-            CboImportFolder.SelectionChanged += CboImportFolder_SelectionChanged;
-
-            // Setup double-click in DataGrid to play demo
-            dgvDemos.MouseDoubleClick += DgvDemos_MouseDoubleClick;
-
-            // Setup Drag & Drop from DataGrid to side Folders
-            dgvDemos.PreviewMouseLeftButtonDown += DgvDemos_PreviewMouseLeftButtonDown;
-            dgvDemos.MouseMove += DgvDemos_MouseMove;
-            lstFolders.DragOver += LstFolders_DragOver;
-            lstFolders.Drop += LstFolders_Drop;
-            lstFolders.PreviewMouseLeftButtonDown += LstFolders_PreviewMouseLeftButtonDown;
-            lstFolders.MouseMove += LstFolders_MouseMove;
-            lstFolders.ContextMenuOpening += LstFolders_ContextMenuOpening;
-            lstFolders.MouseDoubleClick += LstFolders_MouseDoubleClick;
-        }
 
         private void AnimateTabFadeIn(UIElement element)
         {
@@ -460,7 +232,7 @@ namespace FaceitDemoManager
             isUpdatingNickname = false;
         }
 
-        private void FetchUserEloAsync()
+        private async void FetchUserEloAsync()
         {
             string nickname = "";
             this.Dispatcher.Invoke(new Action(() => {
@@ -474,33 +246,14 @@ namespace FaceitDemoManager
                 return;
             }
 
-            Thread thread = new Thread(() =>
-            {
-                int lvl = 0;
-                int elo = 0;
-                try
-                {
-                    using (System.Net.WebClient wc = new System.Net.WebClient())
-                    {
-                        wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) FaceitDemoHub");
-                        string json = wc.DownloadString("https://api.faceit.com/users/v1/nicknames/" + nickname);
-                        Match mLevel = Regex.Match(json, @"""skill_level""\s*:\s*(\d+)");
-                        Match mElo = Regex.Match(json, @"""faceit_elo""\s*:\s*(\d+)");
-                        if (mLevel.Success) lvl = int.Parse(mLevel.Groups[1].Value);
-                        if (mElo.Success) elo = int.Parse(mElo.Groups[1].Value);
-                    }
-                }
-                catch { }
+            var (lvl, elo) = await FaceitApiClient.FetchUserEloAsync(nickname);
 
-                this.userLevel = lvl;
-                this.userElo = elo;
+            this.userLevel = lvl;
+            this.userElo = elo;
 
-                this.Dispatcher.Invoke(new Action(() => {
-                    RefreshDemoList();
-                }));
-            });
-            thread.IsBackground = true;
-            thread.Start();
+            this.Dispatcher.Invoke(new Action(() => {
+                RefreshDemoList();
+            }));
         }
 
         private void LoadConfig()
@@ -751,148 +504,23 @@ namespace FaceitDemoManager
         {
             if (string.IsNullOrEmpty(folderName) || folderName == "[Все демки]" || string.IsNullOrEmpty(nickname)) return;
 
-            AppendLog(string.Format("Обновление статистики для папки '{0}' с никнеймом '{1}'...", folderName, nickname));
-            
-            Thread thread = new Thread(() =>
+            string baseDir = GetDemosBaseDir();
+            System.Threading.Tasks.Task.Run(async () =>
             {
-                try
-                {
-                    string playerId = "";
-                    using (System.Net.WebClient wc = new System.Net.WebClient())
-                    {
-                        wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) FaceitDemoHub");
-                        string profileJson = wc.DownloadString("https://api.faceit.com/users/v1/nicknames/" + nickname);
-                        Match mId = Regex.Match(profileJson, @"""id""\s*:\s*""([^""]+)""");
-                        if (mId.Success)
-                        {
-                            playerId = mId.Groups[1].Value;
-                        }
+                await FaceitApiClient.UpdateFolderDemosStatsAsync(
+                    folderName,
+                    nickname,
+                    baseDir,
+                    this.metadataDb,
+                    msg => AppendLog(msg),
+                    (relPath, dm) => { },
+                    () => {
+                        this.Dispatcher.BeginInvoke(new Action(() => {
+                            RefreshDemoList();
+                        }));
                     }
-
-                    if (string.IsNullOrEmpty(playerId))
-                    {
-                        AppendLog("Не удалось найти игрока с таким никнеймом на Faceit.");
-                        return;
-                    }
-
-                    string historyUrl = string.Format("https://api.faceit.com/stats/v1/stats/time/users/{0}/games/cs2?size=100", playerId);
-                    string historyJson = "";
-                    using (System.Net.WebClient wc = new System.Net.WebClient())
-                    {
-                        wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) FaceitDemoHub");
-                        historyJson = wc.DownloadString(historyUrl);
-                    }
-
-                    var matches = new Dictionary<string, DemoMetadata>(StringComparer.OrdinalIgnoreCase);
-                    MatchCollection mc = Regex.Matches(historyJson, @"\{[^{}]*""matchId""\s*:\s*""([^""]+)""[^{}]*\}");
-                    
-                    foreach (Match matchObj in mc)
-                    {
-                        string block = matchObj.Value;
-                        string matchId = matchObj.Groups[1].Value;
-                        
-                        Match mKills = Regex.Match(block, @"""i6""\s*:\s*""(\d+)""");
-                        Match mAssists = Regex.Match(block, @"""i7""\s*:\s*""(\d+)""");
-                        Match mDeaths = Regex.Match(block, @"""i8""\s*:\s*""(\d+)""");
-                        Match mKD = Regex.Match(block, @"""c2""\s*:\s*""([\d.]+)""");
-                        Match mADR = Regex.Match(block, @"""c10""\s*:\s*""([\d.]+)""");
-                        Match mMap = Regex.Match(block, @"""i1""\s*:\s*""([^""]+)""");
-                        Match mScore = Regex.Match(block, @"""i18""\s*:\s*""([^""]+)""");
-                        Match mDate = Regex.Match(block, @"""date""\s*:\s*(\d+)");
-
-                        if (mKills.Success && mDeaths.Success && mKD.Success)
-                        {
-                            string assists = mAssists.Success ? mAssists.Groups[1].Value : "0";
-                            string adr = mADR.Success ? mADR.Groups[1].Value : "-";
-                            string kdStr = string.Format("{0} ({1}/{2}/{3}) [{4}]", mKD.Groups[1].Value, mKills.Groups[1].Value, mDeaths.Groups[1].Value, assists, adr);
-                            
-                            string dateStr = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                            if (mDate.Success)
-                            {
-                                long timestamp = long.Parse(mDate.Groups[1].Value);
-                                DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                                dateStr = epoch.AddMilliseconds(timestamp).ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
-                            }
-
-                            string mapName = mMap.Success ? mMap.Groups[1].Value : "Unknown";
-                            if (mapName.StartsWith("de_")) mapName = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(mapName.Substring(3));
-                            string scoreStr = mScore.Success ? mScore.Groups[1].Value.Replace(" ", "").Replace("/", "-") : "?-?";
-
-                            DemoMetadata dm = new DemoMetadata()
-                            {
-                                Map = mapName,
-                                Score = scoreStr,
-                                KD = kdStr,
-                                Date = dateStr,
-                                Note = ""
-                            };
-                            matches[matchId] = dm;
-                        }
-                    }
-
-                    string baseDir = GetDemosBaseDir();
-                    string targetFolder = Path.Combine(baseDir, folderName);
-                    if (Directory.Exists(targetFolder))
-                    {
-                        string[] files = Directory.GetFiles(targetFolder, "*.dem");
-                        bool updatedAny = false;
-                        
-                        foreach (string file in files)
-                        {
-                            string fileName = Path.GetFileName(file);
-                            Match mShortId = Regex.Match(fileName, @"_([a-f0-9]{8})\.dem$");
-                            if (mShortId.Success)
-                            {
-                                string shortId = mShortId.Groups[1].Value;
-                                string fullMatchId = null;
-                                foreach (string mid in matches.Keys)
-                                {
-                                    if (mid.Contains(shortId))
-                                    {
-                                        fullMatchId = mid;
-                                        break;
-                                    }
-                                }
-
-                                if (fullMatchId != null)
-                                {
-                                    string relativePath = file.Substring(baseDir.Length).TrimStart('\\', '/').Replace('\\', '/');
-                                    DemoMetadata apiDm = matches[fullMatchId];
-                                    
-                                    DemoMetadata existingDm;
-                                    if (metadataDb.TryGetValue(relativePath, out existingDm))
-                                    {
-                                        apiDm.Note = existingDm.Note;
-                                    }
-
-                                    metadataDb[relativePath] = apiDm;
-                                    DemoProcessor.SaveMetadataForDemo(baseDir, metadataDb, relativePath, apiDm);
-                                    updatedAny = true;
-                                }
-                            }
-                        }
-
-                        if (updatedAny)
-                        {
-                            this.Dispatcher.BeginInvoke(new Action(() =>
-                            {
-                                RefreshDemoList();
-                                AppendLog(string.Format("Статистика для папки '{0}' успешно обновлена!", folderName));
-                            }));
-                        }
-                        else
-                        {
-                            AppendLog("В этой папке не найдено подходящих демок для обновления статистики.");
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    AppendLog("Ошибка при обновлении статистики: " + ex.Message);
-                }
+                );
             });
-            thread.IsBackground = true;
-            thread.Start();
         }
 
         private bool isClosingAnimationCompleted = false;
@@ -938,10 +566,6 @@ namespace FaceitDemoManager
             }));
         }
 
-        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            var anim = new System.Windows.Media.Animation.DoubleAnimation(0, 1, new Duration(TimeSpan.FromSeconds(0.25)));
-            this.BeginAnimation(Window.OpacityProperty, anim);
-        }
+
     }
 }

@@ -59,87 +59,7 @@ namespace FaceitDemoManager
 
         private void LoadSubfoldersRecursive(string baseDir, string relativePath, int depth, List<FolderItem> result)
         {
-            string currentFullDir = string.IsNullOrEmpty(relativePath) ? baseDir : Path.Combine(baseDir, relativePath);
-            if (!Directory.Exists(currentFullDir)) return;
-
-            string[] subdirs;
-            try
-            {
-                subdirs = Directory.GetDirectories(currentFullDir);
-            }
-            catch
-            {
-                return;
-            }
-
-            Array.Sort(subdirs);
-
-            foreach (string subdir in subdirs)
-            {
-                string dirName = Path.GetFileName(subdir);
-                string subRelPath = string.IsNullOrEmpty(relativePath) ? dirName : relativePath + "/" + dirName;
-                
-                // Check if this subdirectory itself has subfolders
-                bool hasChildren = false;
-                try
-                {
-                    hasChildren = Directory.GetDirectories(subdir).Length > 0;
-                }
-                catch { }
-
-                // Check if any parent folder of this item is collapsed
-                bool parentCollapsed = false;
-                if (!string.IsNullOrEmpty(relativePath))
-                {
-                    string[] parts = relativePath.Split('/');
-                    string currentParent = "";
-                    foreach (string part in parts)
-                    {
-                        currentParent = string.IsNullOrEmpty(currentParent) ? part : currentParent + "/" + part;
-                        if (collapsedFolders.Contains(currentParent))
-                        {
-                            parentCollapsed = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (parentCollapsed)
-                {
-                    continue; // Skip rendering this item because its parent is collapsed!
-                }
-
-                // Determine expand/collapse symbol
-                string indicator = "";
-                if (hasChildren)
-                {
-                    indicator = collapsedFolders.Contains(subRelPath) ? "▶ " : "▼ ";
-                }
-                else if (depth > 0)
-                {
-                    indicator = "└─ ";
-                }
-
-                // Construct display name with narrower spacing (3 spaces per depth)
-                string prefix = "";
-                if (depth > 0)
-                {
-                    prefix = new string(' ', (depth - 1) * 3);
-                }
-                
-                result.Add(new FolderItem 
-                { 
-                    DisplayName = prefix + indicator + dirName, 
-                    RelativePath = subRelPath, 
-                    Depth = depth 
-                });
-
-                // Only recurse if this folder itself is NOT collapsed!
-                if (!collapsedFolders.Contains(subRelPath))
-                {
-                    LoadSubfoldersRecursive(baseDir, subRelPath, depth + 1, result);
-                }
-            }
+            LibraryFileService.LoadSubfoldersRecursive(baseDir, relativePath, depth, result, this.collapsedFolders);
         }
 
         private void UpdateImportFolderCombobox()
@@ -279,108 +199,7 @@ namespace FaceitDemoManager
                             }
                         }
 
-                        // Win/Loss and Score
-                        bool isWin = false;
-                        string scoreText = dm.Score;
-                        if (!string.IsNullOrEmpty(dm.Score))
-                        {
-                            string[] parts = dm.Score.Split('-');
-                            if (parts.Length == 2)
-                            {
-                                int s1, s2;
-                                if (int.TryParse(parts[0].Trim(), out s1) && int.TryParse(parts[1].Trim(), out s2))
-                                {
-                                    if (s1 > s2)
-                                    {
-                                        isWin = true;
-                                        scoreText = "W " + s1 + " : " + s2;
-                                    }
-                                    else
-                                    {
-                                        isWin = false;
-                                        scoreText = "L " + s1 + " : " + s2;
-                                    }
-                                }
-                            }
-                        }
-
-                        // Stats: K/D/A and ADR
-                        string kdaText = "-";
-                        string kdRatioText = "-";
-                        string kdStatusText = "Normal";
-                        string adrText = "-";
-
-                        if (!string.IsNullOrEmpty(dm.KD) && dm.KD != "-")
-                        {
-                            Match mRatio = Regex.Match(dm.KD, @"^([\d.]+)");
-                            if (mRatio.Success)
-                            {
-                                kdRatioText = mRatio.Groups[1].Value;
-                                double ratioVal;
-                                if (double.TryParse(kdRatioText, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out ratioVal))
-                                {
-                                    kdStatusText = ratioVal >= 1.0 ? "High" : "Low";
-                                }
-                            }
-
-                            Match mKda = Regex.Match(dm.KD, @"\(([^()]+)\)");
-                            if (mKda.Success)
-                            {
-                                string kdaRaw = mKda.Groups[1].Value;
-                                string[] kparts = kdaRaw.Split('/');
-                                if (kparts.Length == 3)
-                                {
-                                    kdaText = string.Format("{0} / {1} / {2}", kparts[0], kparts[1], kparts[2]);
-                                }
-                                else if (kparts.Length == 2)
-                                {
-                                    kdaText = string.Format("{0} / {1} / -", kparts[0], kparts[1]);
-                                }
-                            }
-
-                            Match mAdrVal = Regex.Match(dm.KD, @"\[([^[\]]+)\]");
-                            if (mAdrVal.Success)
-                            {
-                                adrText = mAdrVal.Groups[1].Value;
-                            }
-                        }
-
-                        // Date
-                        string dateTextFormatted = dm.Date;
-                        DateTime dtVal;
-                        if (DateTime.TryParse(dm.Date, out dtVal))
-                        {
-                            dateTextFormatted = dtVal.ToString("ddd d MMM", new System.Globalization.CultureInfo("ru-RU")) + "\n" + dtVal.ToString("HH:mm");
-                        }
-
-                        // Import Date
-                        DateTime importDt = DateTime.Now;
-                        try
-                        {
-                            importDt = File.GetCreationTime(file);
-                        }
-                        catch { }
-                        string importDateFormatted = importDt.ToString("ddd d MMM", new System.Globalization.CultureInfo("ru-RU")) + "\n" + importDt.ToString("HH:mm");
-
-                        gridList.Add(new DemoGridRow()
-                        {
-                            Check = false,
-                            Map = GetMapEmoji(dm.Map) + " " + dm.Map,
-                            Score = dm.Score,
-                            ScoreText = scoreText,
-                            IsWin = isWin,
-                            KDA = kdaText,
-                            KDRatio = kdRatioText,
-                            KDStatus = kdStatusText,
-                            ADR = adrText,
-                            Date = dm.Date,
-                            DateFormatted = dateTextFormatted,
-                            ImportDate = importDt,
-                            ImportDateFormatted = importDateFormatted,
-                            Folder = folderName.Equals("General", StringComparison.OrdinalIgnoreCase) ? "Общая" : folderName,
-                            Note = dm.Note,
-                            FilePath = file
-                        });
+                        gridList.Add(DemoGridRow.FromMetadata(dm, file, baseDir));
                     }
 
                     // Sort by Import Date descending (most recently added demos at the top) by default
@@ -449,21 +268,6 @@ namespace FaceitDemoManager
             return btn;
         }
 
-        private string GetMapEmoji(string map)
-        {
-            if (string.IsNullOrEmpty(map)) return "🗺️";
-            string name = map.Trim().ToLower();
-            if (name.Contains("mirage")) return "🏜️";
-            if (name.Contains("dust")) return "🏜️";
-            if (name.Contains("ancient")) return "🌴";
-            if (name.Contains("nuke")) return "☢️";
-            if (name.Contains("inferno")) return "🔥";
-            if (name.Contains("anubis")) return "🦂";
-            if (name.Contains("vertigo")) return "🏗️";
-            if (name.Contains("overpass")) return "🌉";
-            return "🗺️";
-        }
-
         private void BtnNewCategory_Click(object sender, RoutedEventArgs e)
         {
             string current = lstFolders.SelectedItem != null ? lstFolders.SelectedItem.ToString() : null;
@@ -492,10 +296,8 @@ namespace FaceitDemoManager
             }
 
             string relativePath = isSubfolder ? parentPath + "/" + name : name;
-            string targetDir = Path.Combine(baseDir, relativePath);
-            try
+            if (LibraryFileService.CreateFolder(baseDir, relativePath))
             {
-                Directory.CreateDirectory(targetDir);
                 RefreshFolders();
                 UpdateImportFolderCombobox();
                 
@@ -509,9 +311,9 @@ namespace FaceitDemoManager
                     }
                 }
             }
-            catch (Exception ex)
+            else
             {
-                ShowMessageDialog("Ошибка", "Не удалось создать папку: " + ex.Message, true);
+                ShowMessageDialog("Ошибка", "Не удалось создать папку.", true);
             }
         }
 
@@ -528,199 +330,14 @@ namespace FaceitDemoManager
             if (!mr) return;
 
             string baseDir = GetDemosBaseDir();
-            string targetDir = Path.Combine(baseDir, current);
-            string genDir = Path.Combine(baseDir, "General");
-
-            try
+            if (LibraryFileService.DeleteCategoryFolder(baseDir, current, this.metadataDb))
             {
-                if (Directory.Exists(targetDir))
-                {
-                    // Move files to General folder to avoid deleting demos
-                    foreach (string file in Directory.GetFiles(targetDir, "*.dem", SearchOption.AllDirectories))
-                    {
-                        string dest = Path.Combine(genDir, Path.GetFileName(file));
-                        if (File.Exists(dest)) File.Delete(dest);
-                        File.Move(file, dest);
-                        
-                        // Update metadata path
-                        string relPath = file.Substring(baseDir.Length).TrimStart('\\', '/').Replace('\\', '/');
-                        string newRel = "General/" + Path.GetFileName(file);
-                        DemoMetadata dm;
-                        if (metadataDb.TryGetValue(relPath, out dm))
-                        {
-                            metadataDb.Remove(relPath);
-                            DemoProcessor.SaveMetadataForDemo(baseDir, metadataDb, newRel, dm);
-                        }
-                    }
-                    Directory.Delete(targetDir, true);
-                }
-
                 RefreshFolders();
                 UpdateImportFolderCombobox();
             }
-            catch (Exception ex)
-            {
-                ShowMessageDialog("Ошибка", "Ошибка при удалении: " + ex.Message, true);
-            }
-        }
-
-        private Point dragStartPoint;
-        private void DgvDemos_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            dragStartPoint = e.GetPosition(null);
-        }
-
-        private void DgvDemos_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed)
-            {
-                Point position = e.GetPosition(null);
-                if (Math.Abs(position.X - dragStartPoint.X) > SystemParameters.MinimumHorizontalDragDistance ||
-                    Math.Abs(position.Y - dragStartPoint.Y) > SystemParameters.MinimumVerticalDragDistance)
-                {
-                    if (dgvDemos.SelectedItems.Count > 0)
-                    {
-                        List<DemoGridRow> selectedRows = new List<DemoGridRow>();
-                        foreach (var item in dgvDemos.SelectedItems)
-                        {
-                            selectedRows.Add((DemoGridRow)item);
-                        }
-                        
-                        DataObject data = new DataObject("DemoGridRows", selectedRows);
-                        DragDrop.DoDragDrop(dgvDemos, data, DragDropEffects.Move);
-                    }
-                }
-            }
-        }
-
-        private void LstFolders_DragOver(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent("DemoGridRows") || e.Data.GetDataPresent("FolderItemPath"))
-            {
-                e.Effects = DragDropEffects.Move;
-            }
             else
             {
-                e.Effects = DragDropEffects.None;
-            }
-            e.Handled = true;
-        }
-
-        private void LstFolders_Drop(object sender, DragEventArgs e)
-        {
-            var targetItem = e.Source as FrameworkElement;
-            FolderItem targetFolder = null;
-            
-            // Traverse visual tree to find ListBoxItem
-            DependencyObject parent = targetItem;
-            while (parent != null && !(parent is ListBoxItem))
-            {
-                parent = VisualTreeHelper.GetParent(parent);
-            }
-            
-            if (parent is ListBoxItem)
-            {
-                targetFolder = ((ListBoxItem)parent).DataContext as FolderItem;
-            }
-            
-            if (targetFolder == null)
-            {
-                // Fallback to hit-testing at the drop position, walking up to ListBoxItem container
-                DependencyObject hit = lstFolders.InputHitTest(e.GetPosition(lstFolders)) as DependencyObject;
-                while (hit != null && !(hit is ListBoxItem))
-                {
-                    hit = VisualTreeHelper.GetParent(hit);
-                }
-                if (hit is ListBoxItem listBoxItem)
-                {
-                    targetFolder = listBoxItem.DataContext as FolderItem;
-                }
-            }
-
-            if (e.Data.GetDataPresent("DemoGridRows"))
-            {
-                if (targetFolder != null)
-                {
-                    string targetFolderRelPath = targetFolder.RelativePath;
-                    if (targetFolderRelPath == "[Все демки]")
-                    {
-                        ShowMessageDialog("Предупреждение", "Демки нельзя перетащить в общую категорию всех демок.", true);
-                        return;
-                    }
-                    
-                    var rows = e.Data.GetData("DemoGridRows") as List<DemoGridRow>;
-                    if (rows != null && rows.Count > 0)
-                    {
-                        MoveSelectedDemos(rows, targetFolderRelPath);
-                    }
-                }
-            }
-            else if (e.Data.GetDataPresent("FolderItemPath"))
-            {
-                var draggedPath = e.Data.GetData("FolderItemPath") as string;
-                if (draggedPath != null)
-                {
-                    FolderItem draggedFolder = null;
-                    foreach (var item in lstFolders.Items)
-                    {
-                        if (item is FolderItem fi && fi.RelativePath == draggedPath)
-                        {
-                            draggedFolder = fi;
-                            break;
-                        }
-                    }
-                    if (draggedFolder != null)
-                    {
-                        string targetRelPath = (targetFolder == null) ? "[Все демки]" : targetFolder.RelativePath;
-                        MoveFolder(draggedFolder, targetRelPath);
-                    }
-                }
-            }
-        }
-
-        private Point folderDragStartPoint;
-        private void LstFolders_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            folderDragStartPoint = e.GetPosition(null);
-        }
-
-        private void LstFolders_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed)
-            {
-                Point position = e.GetPosition(null);
-                if (Math.Abs(position.X - folderDragStartPoint.X) > SystemParameters.MinimumHorizontalDragDistance ||
-                    Math.Abs(position.Y - folderDragStartPoint.Y) > SystemParameters.MinimumVerticalDragDistance)
-                {
-                    FolderItem draggedFolder = null;
-
-                    // 1. Try to find the item under the mouse dynamically
-                    DependencyObject k = e.OriginalSource as DependencyObject;
-                    while (k != null && !(k is ListBoxItem))
-                    {
-                        k = VisualTreeHelper.GetParent(k);
-                    }
-
-                    if (k is ListBoxItem listBoxItem && listBoxItem.DataContext is FolderItem fi)
-                    {
-                        draggedFolder = fi;
-                    }
-
-                    // 2. Fallback to selected item if tree walk failed
-                    if (draggedFolder == null)
-                    {
-                        draggedFolder = lstFolders.SelectedItem as FolderItem;
-                    }
-
-                    if (draggedFolder != null)
-                    {
-                        if (draggedFolder.RelativePath == "[Все демки]" || draggedFolder.RelativePath == "General")
-                            return;
-
-                        DataObject data = new DataObject("FolderItemPath", draggedFolder.RelativePath);
-                        DragDrop.DoDragDrop(lstFolders, data, DragDropEffects.Move);
-                    }
-                }
+                ShowMessageDialog("Ошибка", "Не удалось удалить папку.", true);
             }
         }
 
@@ -795,182 +412,7 @@ namespace FaceitDemoManager
             }
         }
 
-        private void MoveFolder(FolderItem src, string dest)
-        {
-            if (src.RelativePath == dest) return;
 
-            // Prevent circular moving
-            if (dest.StartsWith(src.RelativePath + "/", StringComparison.OrdinalIgnoreCase) || dest.Equals(src.RelativePath, StringComparison.OrdinalIgnoreCase))
-            {
-                ShowMessageDialog("Предупреждение", "Нельзя переместить папку саму в себя или в свои подпапки.", true);
-                return;
-            }
-
-            string baseDir = GetDemosBaseDir();
-            if (string.IsNullOrEmpty(baseDir)) return;
-
-            string srcPath = Path.Combine(baseDir, src.RelativePath);
-            string folderName = Path.GetFileName(srcPath);
-            string destPath = (dest == "[Все демки]" || string.IsNullOrEmpty(dest)) ? Path.Combine(baseDir, folderName) : Path.Combine(baseDir, dest, folderName);
-
-            if (string.Equals(Path.GetFullPath(srcPath), Path.GetFullPath(destPath), StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-
-            if (Directory.Exists(destPath))
-            {
-                ShowMessageDialog("Ошибка", "Папка с таким именем уже существует в месте назначения.", true);
-                return;
-            }
-
-            try
-            {
-                // Physically move directory
-                Directory.Move(srcPath, destPath);
-
-                // Update metadata relative paths
-                string oldRelPrefix = src.RelativePath + "/";
-                string newRelPrefix = (dest == "[Все демки]" || string.IsNullOrEmpty(dest)) ? folderName + "/" : dest + "/" + folderName + "/";
-
-                List<string> keysToUpdate = new List<string>();
-                foreach (string key in metadataDb.Keys)
-                {
-                    if (key.StartsWith(oldRelPrefix, StringComparison.OrdinalIgnoreCase))
-                    {
-                        keysToUpdate.Add(key);
-                    }
-                }
-
-                foreach (string oldKey in keysToUpdate)
-                {
-                    DemoMetadata dm = metadataDb[oldKey];
-                    metadataDb.Remove(oldKey);
-                    string newKey = newRelPrefix + oldKey.Substring(oldRelPrefix.Length);
-                    metadataDb[newKey] = dm;
-                }
-
-                SaveEntireMetadataDb(baseDir);
-
-                // Update nickname settings if applicable
-                if (settings != null && settings.FolderNicknames != null)
-                {
-                    Dictionary<string, string> updatedNicknames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                    
-                    // Copy all unrelated nicknames
-                    foreach (var kvp in settings.FolderNicknames)
-                    {
-                        if (!kvp.Key.Equals(src.RelativePath, StringComparison.OrdinalIgnoreCase) && 
-                            !kvp.Key.StartsWith(oldRelPrefix, StringComparison.OrdinalIgnoreCase))
-                        {
-                            updatedNicknames[kvp.Key] = kvp.Value;
-                        }
-                    }
-
-                    // Rename matching ones
-                    string oldPathSelf = src.RelativePath;
-                    string newPathSelf = (dest == "[Все демки]" || string.IsNullOrEmpty(dest)) ? folderName : dest + "/" + folderName;
-                    
-                    string nick;
-                    if (settings.FolderNicknames.TryGetValue(oldPathSelf, out nick))
-                    {
-                        updatedNicknames[newPathSelf] = nick;
-                    }
-
-                    foreach (var kvp in settings.FolderNicknames)
-                    {
-                        if (kvp.Key.StartsWith(oldRelPrefix, StringComparison.OrdinalIgnoreCase))
-                        {
-                            string newSubKey = newRelPrefix + kvp.Key.Substring(oldRelPrefix.Length);
-                            newSubKey = newSubKey.TrimEnd('/');
-                            updatedNicknames[newSubKey] = kvp.Value;
-                        }
-                    }
-
-                    settings.FolderNicknames = updatedNicknames;
-                    ConfigManager.Save(configPath, settings);
-                }
-
-                RefreshFolders();
-                UpdateImportFolderCombobox();
-
-                // Select the moved folder
-                string finalDestPath = (dest == "[Все демки]" || string.IsNullOrEmpty(dest)) ? folderName : dest + "/" + folderName;
-                foreach (var item in lstFolders.Items)
-                {
-                    if (item is FolderItem fi && fi.RelativePath == finalDestPath)
-                    {
-                        lstFolders.SelectedItem = fi;
-                        break;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ShowMessageDialog("Ошибка", "Не удалось переместить папку: " + ex.Message, true);
-            }
-        }
-
-        private void SaveEntireMetadataDb(string baseDir)
-        {
-            try
-            {
-                string path = Path.Combine(baseDir, "metadata.txt");
-                List<string> lines = new List<string>();
-                foreach (var kvp in metadataDb)
-                {
-                    lines.Add(string.Format("{0}|{1}|{2}|{3}|{4}|{5}", kvp.Key, kvp.Value.Map, kvp.Value.Score, kvp.Value.KD, kvp.Value.Date, kvp.Value.Note));
-                }
-                File.WriteAllLines(path, lines);
-            }
-            catch { }
-        }
-
-        private void MoveSelectedDemos(List<DemoGridRow> rows, string targetFolder)
-        {
-            string baseDir = GetDemosBaseDir();
-            if (string.IsNullOrEmpty(baseDir)) return;
-
-            string targetPath = Path.Combine(baseDir, targetFolder);
-            if (!Directory.Exists(targetPath)) return;
-
-            int movedCount = 0;
-            foreach (var row in rows)
-            {
-                string oldPath = row.FilePath;
-                string newPath = Path.Combine(targetPath, Path.GetFileName(oldPath));
-                
-                if (oldPath.Equals(newPath, StringComparison.OrdinalIgnoreCase)) continue;
-
-                try
-                {
-                    if (File.Exists(newPath)) File.Delete(newPath);
-                    File.Move(oldPath, newPath);
-
-                    // Update metadata file
-                    string oldRel = oldPath.Substring(baseDir.Length).TrimStart('\\', '/').Replace('\\', '/');
-                    string newRel = newPath.Substring(baseDir.Length).TrimStart('\\', '/').Replace('\\', '/');
-                    
-                    DemoMetadata dm;
-                    if (metadataDb.TryGetValue(oldRel, out dm))
-                    {
-                        metadataDb.Remove(oldRel);
-                        DemoProcessor.SaveMetadataForDemo(baseDir, metadataDb, newRel, dm);
-                    }
-                    movedCount++;
-                }
-                catch (Exception ex)
-                {
-                    ShowMessageDialog("Ошибка", string.Format("Не удалось перенести демо {0}: {1}", Path.GetFileName(oldPath), ex.Message), true);
-                }
-            }
-
-            if (movedCount > 0)
-            {
-                RefreshDemoList();
-                lblStatus.Text = string.Format("Перемещено демок: {0}", movedCount);
-            }
-        }
 
         private void DgvDemos_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -1043,69 +485,24 @@ namespace FaceitDemoManager
             DemoProcessor.SaveMetadataForDemo(baseDir, metadataDb, relPath, dm);
 
             // Update row properties
-            row.Map = GetMapEmoji(dm.Map) + " " + dm.Map;
+            row.Map = DemoGridRow.GetMapEmoji(dm.Map) + " " + dm.Map;
             row.Score = dm.Score;
             row.Date = dm.Date;
             row.Note = dm.Note;
 
-            // Re-calculate formatted fields
-            bool isWin = false;
-            string scoreText = dm.Score;
-            if (!string.IsNullOrEmpty(dm.Score))
-            {
-                string[] parts = dm.Score.Split('-');
-                if (parts.Length == 2)
-                {
-                    int s1, s2;
-                    if (int.TryParse(parts[0].Trim(), out s1) && int.TryParse(parts[1].Trim(), out s2))
-                    {
-                        if (s1 > s2) { isWin = true; scoreText = "W " + s1 + " : " + s2; }
-                        else { isWin = false; scoreText = "L " + s1 + " : " + s2; }
-                    }
-                }
-            }
-            row.IsWin = isWin;
-            row.ScoreText = scoreText;
-
-            string kdaText = "-";
-            string kdRatioText = "-";
-            string kdStatusText = "Normal";
-            string adrText = "-";
-            if (!string.IsNullOrEmpty(dm.KD) && dm.KD != "-")
-            {
-                Match mRatio = Regex.Match(dm.KD, @"^([\d.]+)");
-                if (mRatio.Success)
-                {
-                    kdRatioText = mRatio.Groups[1].Value;
-                    double ratioVal;
-                    if (double.TryParse(kdRatioText, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out ratioVal))
-                    {
-                        kdStatusText = ratioVal >= 1.0 ? "High" : "Low";
-                    }
-                }
-                Match mKda = Regex.Match(dm.KD, @"\(([^()]+)\)");
-                if (mKda.Success)
-                {
-                    string kdaRaw = mKda.Groups[1].Value;
-                    string[] kparts = kdaRaw.Split('/');
-                    if (kparts.Length == 3) kdaText = string.Format("{0} / {1} / {2}", kparts[0], kparts[1], kparts[2]);
-                    else if (kparts.Length == 2) kdaText = string.Format("{0} / {1} / -", kparts[0], kparts[1]);
-                }
-                Match mAdrVal = Regex.Match(dm.KD, @"\[([^[\]]+)\]");
-                if (mAdrVal.Success) adrText = mAdrVal.Groups[1].Value;
-            }
-            row.KDA = kdaText;
-            row.KDRatio = kdRatioText;
-            row.KDStatus = kdStatusText;
-            row.ADR = adrText;
-
-            string dateTextFormatted = dm.Date;
-            DateTime dtVal;
-            if (DateTime.TryParse(dm.Date, out dtVal))
-            {
-                dateTextFormatted = dtVal.ToString("ddd d MMM", new System.Globalization.CultureInfo("ru-RU")) + "\n" + dtVal.ToString("HH:mm");
-            }
-            row.DateFormatted = dateTextFormatted;
+            // Update row properties
+            var tempRow = DemoGridRow.FromMetadata(dm, file, baseDir);
+            row.Map = tempRow.Map;
+            row.Score = tempRow.Score;
+            row.ScoreText = tempRow.ScoreText;
+            row.IsWin = tempRow.IsWin;
+            row.KDA = tempRow.KDA;
+            row.KDRatio = tempRow.KDRatio;
+            row.KDStatus = tempRow.KDStatus;
+            row.ADR = tempRow.ADR;
+            row.Date = tempRow.Date;
+            row.DateFormatted = tempRow.DateFormatted;
+            row.Note = tempRow.Note;
 
             dgvDemos.Items.Refresh();
         }

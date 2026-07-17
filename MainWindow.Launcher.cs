@@ -95,56 +95,14 @@ namespace FaceitDemoManager
                 return;
             }
 
-            // Try to find Steam directory to launch via Steam client to avoid connection issues
-            string steamPath = null;
-            try
-            {
-                steamPath = Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam", "InstallPath", null) as string;
-                if (string.IsNullOrEmpty(steamPath))
-                {
-                    steamPath = Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam", "InstallPath", null) as string;
-                }
-            }
-            catch { }
-
-            string steamExe = null;
-            if (!string.IsNullOrEmpty(steamPath))
-            {
-                string testPath = Path.Combine(steamPath, "steam.exe");
-                if (File.Exists(testPath)) steamExe = testPath;
-            }
-
-            if (string.IsNullOrEmpty(steamExe))
-            {
-                string[] commonPaths = new string[] {
-                    @"C:\Program Files (x86)\Steam\steam.exe",
-                    @"C:\Program Files\Steam\steam.exe",
-                    @"D:\Steam\steam.exe",
-                    @"E:\Steam\steam.exe"
-                };
-                foreach (string p in commonPaths)
-                {
-                    if (File.Exists(p)) { steamExe = p; break; }
-                }
-            }
-
             string voiceArgs = settings.EnableDemoVoice ? " +tv_listen_voice_indices -1 +tv_listen_voice_indices_h -1" : "";
             string launchArgs = voiceArgs + bindArgs;
 
             try
             {
-                if (!string.IsNullOrEmpty(steamExe))
-                {
-                    string steamArgs = "-applaunch 730 -steam -game csgo +playdemo faceit_demos/General/faceit.dem" + launchArgs;
-                    Process.Start(steamExe, steamArgs);
-                    lblStatus.Text = "Запуск CS2 (через Steam): " + Path.GetFileName(file);
-                }
-                else
-                {
-                    string args = "-steam -game csgo +playdemo faceit_demos/General/faceit.dem" + launchArgs;
-                    Process.Start(cs2Exe, args);
-                    lblStatus.Text = "Запуск CS2 (напрямую): " + Path.GetFileName(file);
-                }
+                string args = "-steam -game csgo +playdemo faceit_demos/General/faceit.dem" + launchArgs;
+                Process.Start(cs2Exe, args);
+                lblStatus.Text = "Запуск CS2: " + Path.GetFileName(file);
             }
             catch (Exception ex)
             {
