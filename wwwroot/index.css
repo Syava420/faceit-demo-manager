@@ -582,10 +582,55 @@ input[type="text"]:focus, select:focus, textarea:focus {
   color: var(--text-main);
 }
 
+/* Scores & Win/Loss */
+.score-win {
+  color: #10b981;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
+}
+.score-loss {
+  color: #ef4444;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.25);
+}
+
+/* Editable Note Cell */
+.note-cell {
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: 4px;
+  padding: 4px 6px;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.note-cell:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.note-placeholder {
+  color: var(--text-dark);
+  font-style: italic;
+  font-size: 12px;
+}
+.note-input {
+  width: 100%;
+  padding: 3px 6px !important;
+  font-size: 12px !important;
+  background: #121216 !important;
+  border: 1px solid var(--primary) !important;
+  border-radius: 4px !important;
+  color: #fff !important;
+}
+
+tr.drag-over-row {
+  border-bottom: 2px solid var(--primary) !important;
+  background: rgba(139, 92, 246, 0.1) !important;
+}
+
 /* Toggles */
 .toggles-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
   gap: 12px;
 }
 

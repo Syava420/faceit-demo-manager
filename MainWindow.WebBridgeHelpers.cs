@@ -135,12 +135,24 @@ namespace FaceitDemoManager
                         meta = new DemoMetadata { Map = "de_mirage", Score = "13:10", KD = "1.25", Date = File.GetCreationTime(f).ToString("dd.MM.yyyy HH:mm") };
                     }
                 }
+
+                bool? isWin = null;
+                if (!string.IsNullOrEmpty(meta.Score))
+                {
+                    string[] parts = meta.Score.Split(new char[] { '-', ':', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length >= 2 && int.TryParse(parts[0], out int s1) && int.TryParse(parts[1], out int s2))
+                    {
+                        if (s1 != s2) isWin = s1 > s2;
+                    }
+                }
+
                 return new {
                     fileName = filename,
                     filePath = f,
                     map = meta.Map ?? "Unknown",
                     mapEmoji = DemoGridRow.GetMapEmoji(meta.Map),
                     score = meta.Score ?? "-",
+                    isWin = isWin,
                     kd = meta.KD ?? "-",
                     date = meta.Date ?? File.GetCreationTime(f).ToString("dd.MM.yyyy"),
                     note = meta.Note ?? ""
@@ -152,6 +164,42 @@ namespace FaceitDemoManager
                 type = "updateDemos",
                 demos = demoList
             });
+        }
+
+        public void ReorderDemosWeb(System.Collections.Generic.List<string> filePaths)
+        {
+            if (filePaths == null || filePaths.Count == 0) return;
+            string baseDir = GetDemosBaseDir();
+            var newDb = new System.Collections.Generic.Dictionary<string, DemoMetadata>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (string fp in filePaths)
+            {
+                string relPath = "";
+                if (fp.StartsWith(baseDir, StringComparison.OrdinalIgnoreCase))
+                {
+                    relPath = fp.Substring(baseDir.Length).TrimStart('\\', '/').Replace('\\', '/');
+                }
+                else
+                {
+                    relPath = Path.GetFileName(fp);
+                }
+
+                if (metadataDb.TryGetValue(relPath, out DemoMetadata dm))
+                {
+                    newDb[relPath] = dm;
+                }
+            }
+
+            foreach (var kvp in metadataDb)
+            {
+                if (!newDb.ContainsKey(kvp.Key))
+                {
+                    newDb[kvp.Key] = kvp.Value;
+                }
+            }
+
+            metadataDb = newDb;
+            SaveEntireMetadataDb(baseDir);
         }
 
         public void PlayDemoByPath(string filePath)

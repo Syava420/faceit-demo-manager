@@ -220,33 +220,19 @@ function setupDragAndDrop() {
     postNativeMessage({ action: 'browseDemosManual' });
   });
 
-  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, preventDefaults, false);
-  });
-
-  function preventDefaults(e) {
+  window.addEventListener('dragover', (e) => {
     e.preventDefault();
-    e.stopPropagation();
-  }
-
-  ['dragenter', 'dragover'].forEach(eventName => {
-    dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+    if (dropZone) dropZone.classList.add('dragover');
   });
 
-  ['dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+  window.addEventListener('dragleave', (e) => {
+    if (e.clientX <= 0 || e.clientY <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
+      if (dropZone) dropZone.classList.remove('dragover');
+    }
   });
 
-  dropZone.addEventListener('drop', (e) => {
-    const files = [];
-    if (e.dataTransfer && e.dataTransfer.files) {
-      for (let i = 0; i < e.dataTransfer.files.length; i++) {
-        files.push(e.dataTransfer.files[i].path);
-      }
-    }
-    if (files.length > 0) {
-      postNativeMessage({ action: 'importFiles', filePaths: files });
-    }
+  window.addEventListener('drop', (e) => {
+    if (dropZone) dropZone.classList.remove('dragover');
   });
 }
 
@@ -452,11 +438,21 @@ function renderCategories() {
 
     item.addEventListener('drop', (e) => {
       item.classList.remove('drag-over');
-      const demoPath = e.dataTransfer.getData('text/demo-filepath');
+      const rawPaths = e.dataTransfer.getData('text/demo-filepaths');
+      const singleDemoPath = e.dataTransfer.getData('text/demo-filepath');
       const draggedCatPath = e.dataTransfer.getData('text/category-path');
 
-      if (demoPath) {
-        postNativeMessage({ action: 'moveDemo', filePath: demoPath, category: c.relativePath });
+      if (rawPaths || singleDemoPath) {
+        let pathsToMove = [];
+        if (rawPaths) {
+          try { pathsToMove = JSON.parse(rawPaths); } catch {}
+        }
+        if (!pathsToMove || pathsToMove.length === 0) {
+          if (singleDemoPath) pathsToMove = [singleDemoPath];
+        }
+        if (pathsToMove.length > 0) {
+          postNativeMessage({ action: 'moveDemos', filePaths: pathsToMove, category: c.relativePath });
+        }
       } else if (draggedCatPath) {
         if (draggedCatPath !== c.relativePath) {
           postNativeMessage({ action: 'moveFolder', src: draggedCatPath, dest: c.relativePath });
@@ -535,12 +531,25 @@ function renderDemos() {
       tr.classList.add('selected');
     }
 
+    let scoreHtml = d.score || '-';
+    if (d.score && d.score !== '-' && d.score !== '?-?') {
+      let scoreClass = 'score-normal';
+      if (d.isWin === true) {
+        scoreClass = 'score-win';
+      } else if (d.isWin === false) {
+        scoreClass = 'score-loss';
+      }
+      scoreHtml = `<span class="${scoreClass}">${d.score}</span>`;
+    }
+
+    const noteDisplay = d.note ? escapeHtml(d.note) : `<span class="note-placeholder">+ Заметка</span>`;
+
     tr.innerHTML = `
       <td><strong>${d.mapEmoji || '🗺️'} ${d.map || 'Unknown'}</strong></td>
-      <td>${d.score || '-'}</td>
+      <td>${scoreHtml}</td>
       <td>${d.kd || '-'}</td>
       <td>${d.date || '-'}</td>
-      <td>${d.note || ''}</td>
+      <td class="note-cell" title="Нажмите, чтобы изменить заметку" onclick="event.stopPropagation(); editDemoNote(this, '${d.filePath}')">${noteDisplay}</td>
       <td>
         <button class="btn-secondary" onclick="event.stopPropagation(); copyDemoConfig('${d.filePath}', this)">Копировать конфиг</button>
       </td>
@@ -599,8 +608,31 @@ function renderDemos() {
       playSingleDemo(d.filePath);
     });
     tr.addEventListener('dragstart', (e) => {
+      const paths = state.selectedDemos.includes(d.filePath) ? state.selectedDemos : [d.filePath];
+      e.dataTransfer.setData('text/demo-filepaths', JSON.stringify(paths));
       e.dataTransfer.setData('text/demo-filepath', d.filePath);
       e.dataTransfer.effectAllowed = 'move';
+    });
+    tr.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      tr.classList.add('drag-over-row');
+    });
+    tr.addEventListener('dragleave', () => {
+      tr.classList.remove('drag-over-row');
+    });
+    tr.addEventListener('drop', (e) => {
+      tr.classList.remove('drag-over-row');
+      const draggedFilePath = e.dataTransfer.getData('text/demo-filepath');
+      if (draggedFilePath && draggedFilePath !== d.filePath) {
+        const fromIdx = state.demos.findIndex(x => x.filePath === draggedFilePath);
+        const toIdx = state.demos.findIndex(x => x.filePath === d.filePath);
+        if (fromIdx !== -1 && toIdx !== -1) {
+          const [movedItem] = state.demos.splice(fromIdx, 1);
+          state.demos.splice(toIdx, 0, movedItem);
+          renderDemos();
+          postNativeMessage({ action: 'reorderDemos', filePaths: state.demos.map(x => x.filePath) });
+        }
+      }
     });
     elements.tblDemoBody.appendChild(tr);
   });
@@ -737,6 +769,53 @@ function showCategoryContextMenu(e, cat) {
     document.removeEventListener('click', closeMenu);
   };
   setTimeout(() => document.addEventListener('click', closeMenu), 0);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function editDemoNote(cell, filePath) {
+  if (cell.querySelector('input')) return;
+  const d = state.demos.find(x => x.filePath === filePath);
+  const currentNote = d ? (d.note || '') : '';
+
+  cell.innerHTML = `<input type="text" class="note-input" value="${escapeHtml(currentNote)}" placeholder="Введите заметку...">`;
+  const input = cell.querySelector('input');
+  input.focus();
+  input.select();
+
+  let isSaved = false;
+  const saveNote = () => {
+    if (isSaved) return;
+    isSaved = true;
+    const newNote = input.value.trim();
+    if (d) d.note = newNote;
+    cell.innerHTML = newNote ? `<span class="note-text">${escapeHtml(newNote)}</span>` : `<span class="note-placeholder">+ Заметка</span>`;
+    postNativeMessage({
+      action: 'saveDemoMetadata',
+      filePath: filePath,
+      map: d ? d.map : '',
+      score: d ? d.score : '',
+      kd: d ? d.kd : '',
+      date: d ? d.date : '',
+      note: newNote
+    });
+  };
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveNote();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      isSaved = true;
+      cell.innerHTML = currentNote ? `<span class="note-text">${escapeHtml(currentNote)}</span>` : `<span class="note-placeholder">+ Заметка</span>`;
+    }
+  });
+
+  input.addEventListener('blur', saveNote);
 }
 
 function copyDemoConfig(filePath, btn) {

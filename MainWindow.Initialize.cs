@@ -53,6 +53,28 @@ namespace FaceitDemoManager
                 ClipToBounds = true
             };
 
+            container.AllowDrop = true;
+            container.DragOver += (s, e) =>
+            {
+                if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                {
+                    e.Effects = DragDropEffects.Copy | DragDropEffects.Move;
+                    e.Handled = true;
+                }
+            };
+            container.Drop += (s, e) =>
+            {
+                if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                {
+                    string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                    if (files != null && files.Length > 0)
+                    {
+                        ProcessManualFiles(files);
+                    }
+                    e.Handled = true;
+                }
+            };
+
             webView = new Microsoft.Web.WebView2.Wpf.WebView2();
             
             // Register native WPF Drag & Drop handlers on WebView2 control to bypass chromium sandbox blocks on Drag & Drop file path retrieval
@@ -61,20 +83,20 @@ namespace FaceitDemoManager
             {
                 if (e.Data.GetDataPresent(DataFormats.FileDrop))
                 {
-                    e.Effects = DragDropEffects.Move;
+                    e.Effects = DragDropEffects.Copy | DragDropEffects.Move;
+                    e.Handled = true;
                 }
-                else
-                {
-                    e.Effects = DragDropEffects.None;
-                }
-                e.Handled = true;
             };
             webView.Drop += (s, e) =>
             {
                 if (e.Data.GetDataPresent(DataFormats.FileDrop))
                 {
                     string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                    ProcessManualFiles(files);
+                    if (files != null && files.Length > 0)
+                    {
+                        ProcessManualFiles(files);
+                    }
+                    e.Handled = true;
                 }
             };
 

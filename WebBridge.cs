@@ -143,9 +143,11 @@ namespace FaceitDemoManager
                     break;
 
                 case "moveDemo":
-                    if (root.TryGetProperty("filePath", out JsonElement demoPathProp) && root.TryGetProperty("category", out JsonElement targetCatProp))
                     {
-                        _mainWindow.MoveDemoWeb(demoPathProp.GetString(), targetCatProp.GetString());
+                        if (root.TryGetProperty("filePath", out JsonElement demoPathProp) && root.TryGetProperty("category", out JsonElement targetCatProp))
+                        {
+                            _mainWindow.MoveDemoWeb(demoPathProp.GetString(), targetCatProp.GetString());
+                        }
                     }
                     break;
 
@@ -236,6 +238,37 @@ namespace FaceitDemoManager
                                 list.Add(p.GetString());
                             }
                             _mainWindow.MoveSelectedDemosWebPrompt(list);
+                        }
+                    }
+                    break;
+                case "moveDemos":
+                    {
+                        if (root.TryGetProperty("filePaths", out JsonElement pathsProp) && pathsProp.ValueKind == JsonValueKind.Array)
+                        {
+                            var list = new System.Collections.Generic.List<string>();
+                            foreach (var p in pathsProp.EnumerateArray())
+                            {
+                                list.Add(p.GetString());
+                            }
+                            string cat = root.TryGetProperty("category", out JsonElement catP) ? catP.GetString() : "General";
+                            _mainWindow.MoveDemosWeb(list, cat);
+                        }
+                        else if (root.TryGetProperty("filePath", out JsonElement singlePathProp) && root.TryGetProperty("category", out JsonElement singleCatProp))
+                        {
+                            _mainWindow.MoveDemoWeb(singlePathProp.GetString(), singleCatProp.GetString());
+                        }
+                    }
+                    break;
+                case "reorderDemos":
+                    {
+                        if (root.TryGetProperty("filePaths", out JsonElement pathsProp) && pathsProp.ValueKind == JsonValueKind.Array)
+                        {
+                            var list = new System.Collections.Generic.List<string>();
+                            foreach (var p in pathsProp.EnumerateArray())
+                            {
+                                list.Add(p.GetString());
+                            }
+                            _mainWindow.ReorderDemosWeb(list);
                         }
                     }
                     break;
