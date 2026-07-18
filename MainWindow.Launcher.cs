@@ -51,6 +51,11 @@ namespace FaceitDemoManager
                 Directory.CreateDirectory(Path.GetDirectoryName(destPath));
                 File.Copy(file, destPath, true);
             }
+            catch (IOException ioEx) when (ioEx.Message.Contains("used by another process") || ioEx.Message.Contains("занят другим процессом"))
+            {
+                ShowMessageDialog("Ошибка запуска", "Файл воспроизведения занят игрой CS2.\n\nЗакройте CS2 или введите команду 'disconnect' в консоли игры, затем попробуйте запустить демку снова.", true);
+                return;
+            }
             catch (Exception ex)
             {
                 ShowMessageDialog("Ошибка", "Ошибка подготовки запуска: " + ex.Message, true);

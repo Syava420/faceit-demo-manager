@@ -705,6 +705,11 @@ namespace FaceitDemoManager
                 Directory.CreateDirectory(Path.GetDirectoryName(destPath));
                 File.Copy(filePath, destPath, true);
             }
+            catch (IOException ioEx) when (ioEx.Message.Contains("used by another process") || ioEx.Message.Contains("занят другим процессом"))
+            {
+                ShowMessageDialog("Ошибка копирования", "Файл воспроизведения занят игрой CS2.\n\nЗакройте CS2 или введите команду 'disconnect' в консоли игры, затем попробуйте снова.", true);
+                return;
+            }
             catch (Exception ex)
             {
                 AppendLog("Ошибка подготовки копирования конфига: " + ex.Message);

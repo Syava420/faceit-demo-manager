@@ -497,8 +497,7 @@ function renderDemos() {
       <td>${d.date || '-'}</td>
       <td>${d.note || ''}</td>
       <td>
-        <button class="btn-secondary btn-icon-sm" onclick="event.stopPropagation(); playSingleDemo('${d.filePath}')" title="Играть в CS2">▶ Играть</button>
-        <button class="btn-secondary btn-icon-sm" onclick="event.stopPropagation(); copyDemoConfig('${d.filePath}')" title="Скопировать консольную команду">📋 Конфиг</button>
+        <button class="btn-secondary" onclick="event.stopPropagation(); copyDemoConfig('${d.filePath}')">Копировать конфиг</button>
       </td>
     `;
     tr.addEventListener('click', () => {
