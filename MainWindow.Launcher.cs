@@ -34,9 +34,6 @@ namespace FaceitDemoManager
         {
             if (string.IsNullOrEmpty(file) || !File.Exists(file)) return;
 
-            string cs2Dir = settings != null && !string.IsNullOrEmpty(settings.CS2Path) ? settings.CS2Path : (txtCS2 != null ? txtCS2.Text.Trim() : "");
-            string cs2Exe = Path.Combine(Path.GetDirectoryName(cs2Dir), "bin", "win64", "cs2.exe");
-
             string baseDir = GetDemosBaseDir();
             // Copy selected demo to target faceit.dem in General
             string destPath = Path.Combine(Path.Combine(baseDir, "General"), "faceit.dem");
@@ -64,7 +61,6 @@ namespace FaceitDemoManager
             }
 
             // Append active CS2 binds to clipboard
-            string bindArgs = "";
             if (settings.AutoApplyBinds && settings.Binds != null)
             {
                 foreach (var b in settings.Binds)
@@ -72,7 +68,6 @@ namespace FaceitDemoManager
                     if (b.IsEnabled && !string.IsNullOrEmpty(b.Key) && !string.IsNullOrEmpty(b.Command))
                     {
                         playCmd += string.Format("; bind \"{0}\" \"{1}\"", b.Key, b.Command);
-                        bindArgs += string.Format(" +bind \"{0}\" \"{1}\"", b.Key, b.Command.Replace("\"", "\\\""));
                     }
                 }
             }
@@ -106,33 +101,22 @@ namespace FaceitDemoManager
                 return;
             }
 
-            string voiceArgs = settings.EnableDemoVoice ? " +tv_listen_voice_indices -1 +tv_listen_voice_indices_h -1" : "";
-            string launchArgs = voiceArgs + bindArgs;
-
-            if (!File.Exists(cs2Exe))
-            {
-                ShowMessageDialog("Ошибка CS2", "Не найден cs2.exe по пути: " + cs2Exe, true);
-                return;
-            }
-
             try
             {
-                string args = "-steam -game csgo +playdemo faceit_demos/General/faceit.dem" + launchArgs;
-                ProcessStartInfo psi = new ProcessStartInfo
+                Process.Start(new ProcessStartInfo("steam://run/730") { UseShellExecute = true });
+                lblStatus.Text = "Запуск CS2 через Steam...";
+                if (!copySuccess)
                 {
-                    FileName = cs2Exe,
-                    Arguments = args,
-                    WorkingDirectory = Path.GetDirectoryName(cs2Exe),
-                    UseShellExecute = false
-                };
-                psi.EnvironmentVariables["SteamAppId"] = "730";
-
-                Process.Start(psi);
-                lblStatus.Text = "Запуск CS2: " + Path.GetFileName(file);
+                    ShowMessageDialog("Запуск CS2", "Запускаем CS2 через Steam...\n\nКоманда для воспроизведения демки скопирована в буфер обмена. Вставьте её в консоль CS2 (нажмите Ctrl+V) после загрузки игры.\n\n(Файл воспроизведения занят, поэтому новая демка воспроизведется после ввода disconnect или перезапуска CS2).");
+                }
+                else
+                {
+                    ShowMessageDialog("Запуск CS2", "Запускаем CS2 через Steam...\n\nКоманда для воспроизведения демки скопирована в буфер обмена.\n\nПосле того как игра загрузится, откройте консоль (~) и вставьте команду (нажмите Ctrl+V).");
+                }
             }
             catch (Exception ex)
             {
-                ShowMessageDialog("Ошибка", "Ошибка запуска процесса: " + ex.Message, true);
+                ShowMessageDialog("Ошибка запуска", "Не удалось запустить CS2 через Steam: " + ex.Message, true);
             }
         }
 
