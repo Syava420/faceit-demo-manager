@@ -341,6 +341,40 @@ function getFolderNickname(folderPath, customSettings) {
     postNativeMessage({ action: 'resetBindsToDefault' });
   });
 
+  // Modal Dialog Actions
+  document.getElementById('btnMdlClose')?.addEventListener('click', closeEditDemoModal);
+  document.getElementById('btnMdlCancel')?.addEventListener('click', closeEditDemoModal);
+  document.getElementById('btnMdlSave')?.addEventListener('click', () => {
+    if (!currentEditingDemoPath) return;
+
+    const mapVal = document.getElementById('txtEditMap')?.value.trim() || '';
+    const scoreVal = document.getElementById('txtEditScore')?.value.trim() || '';
+    const kdVal = document.getElementById('txtEditKD')?.value.trim() || '';
+    const dateVal = document.getElementById('txtEditDate')?.value.trim() || '';
+    const noteVal = document.getElementById('txtNoteEdit')?.value.trim() || '';
+
+    const d = state.demos.find(x => x.filePath === currentEditingDemoPath);
+    if (d) {
+      d.map = mapVal;
+      d.score = scoreVal;
+      d.kd = kdVal;
+      d.date = dateVal;
+      d.note = noteVal;
+    }
+
+    postNativeMessage({
+      action: 'saveDemoMetadata',
+      filePath: currentEditingDemoPath,
+      map: mapVal,
+      score: scoreVal,
+      kd: kdVal,
+      date: dateVal,
+      note: noteVal
+    });
+
+    closeEditDemoModal();
+  });
+
   // Search Input
   if (elements.txtSearch) {
     elements.txtSearch.addEventListener('input', renderDemos);
@@ -495,14 +529,14 @@ function renderDemos() {
       <td>${d.date || '-'}</td>
       <td>${d.note || ''}</td>
       <td>
-        <button class="btn-secondary" onclick="playSingleDemo('${d.filePath}')">▶ Играть</button>
+        <button class="btn-secondary btn-icon-sm" onclick="event.stopPropagation(); playSingleDemo('${d.filePath}')" title="Играть">▶ Играть</button>
+        <button class="btn-secondary btn-icon-sm" onclick="event.stopPropagation(); openEditDemoModal('${d.filePath}')" title="Редактировать">✏️ Редактировать</button>
       </td>
     `;
     tr.addEventListener('click', () => {
       document.querySelectorAll('.demo-table tr').forEach(r => r.classList.remove('selected'));
       tr.classList.add('selected');
       state.selectedDemoPath = d.filePath;
-      renderDemoDetails();
     });
     tr.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/demo-filepath', d.filePath);
@@ -511,11 +545,9 @@ function renderDemos() {
     elements.tblDemoBody.appendChild(tr);
   });
 
-  // Clear selected path if it's no longer in the filtered list
   if (state.selectedDemoPath && !filtered.some(x => x.filePath === state.selectedDemoPath)) {
     state.selectedDemoPath = null;
   }
-  renderDemoDetails();
 }
 
 // Render Binds Table
@@ -649,85 +681,38 @@ function showCategoryContextMenu(e, cat) {
 }
 
 // Render Selected Demo Details Panel
-function renderDemoDetails() {
-  const pnl = document.getElementById('pnlDemoDetails');
-  if (!pnl) return;
+let currentEditingDemoPath = null;
 
-  if (!state.selectedDemoPath) {
-    pnl.innerHTML = `
-      <div class="no-demo-selected">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5; margin-bottom: 8px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <p>Выберите демо для просмотра деталей и редактирования</p>
-      </div>
-    `;
-    return;
+function openEditDemoModal(filePath) {
+  const d = state.demos.find(x => x.filePath === filePath);
+  if (!d) return;
+
+  currentEditingDemoPath = filePath;
+
+  const txtMap = document.getElementById('txtEditMap');
+  const txtScore = document.getElementById('txtEditScore');
+  const txtKD = document.getElementById('txtEditKD');
+  const txtDate = document.getElementById('txtEditDate');
+  const txtNote = document.getElementById('txtNoteEdit');
+
+  if (txtMap) txtMap.value = d.map || '';
+  if (txtScore) txtScore.value = d.score || '';
+  if (txtKD) txtKD.value = d.kd || '';
+  if (txtDate) txtDate.value = d.date || '';
+  if (txtNote) txtNote.value = d.note || '';
+
+  const modal = document.getElementById('mdlEditDemo');
+  if (modal) {
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('active'), 10);
   }
+}
 
-  const d = state.demos.find(x => x.filePath === state.selectedDemoPath);
-  if (!d) {
-    state.selectedDemoPath = null;
-    renderDemoDetails();
-    return;
+function closeEditDemoModal() {
+  const modal = document.getElementById('mdlEditDemo');
+  if (modal) {
+    modal.classList.remove('active');
+    setTimeout(() => modal.style.display = 'none', 250);
   }
-
-  pnl.innerHTML = `
-    <div class="demo-details-header">
-      <h4>Детали матча</h4>
-    </div>
-    <div class="demo-details-form">
-      <div class="form-group">
-        <label>Карта</label>
-        <input type="text" id="txtEditMap" value="${d.map || ''}" placeholder="de_mirage">
-      </div>
-      <div class="form-group">
-        <label>Счет</label>
-        <input type="text" id="txtEditScore" value="${d.score || ''}" placeholder="13:10">
-      </div>
-      <div class="form-group">
-        <label>K / D / A</label>
-        <input type="text" id="txtEditKD" value="${d.kd || ''}" placeholder="1.25">
-      </div>
-      <div class="form-group">
-        <label>Дата добавления</label>
-        <input type="text" id="txtEditDate" value="${d.date || ''}">
-      </div>
-      <div class="form-group">
-        <label>Заметка</label>
-        <textarea id="txtNoteEdit" rows="4" placeholder="Ваша заметка о матче...">${d.note || ''}</textarea>
-      </div>
-    </div>
-  `;
-
-  // Attach change/input listeners for auto-save!
-  const saveMetadata = () => {
-    const mapVal = document.getElementById('txtEditMap')?.value.trim() || '';
-    const scoreVal = document.getElementById('txtEditScore')?.value.trim() || '';
-    const kdVal = document.getElementById('txtEditKD')?.value.trim() || '';
-    const dateVal = document.getElementById('txtEditDate')?.value.trim() || '';
-    const noteVal = document.getElementById('txtNoteEdit')?.value.trim() || '';
-
-    d.map = mapVal;
-    d.score = scoreVal;
-    d.kd = kdVal;
-    d.date = dateVal;
-    d.note = noteVal;
-
-    postNativeMessage({
-      action: 'saveDemoMetadata',
-      filePath: d.filePath,
-      map: mapVal,
-      score: scoreVal,
-      kd: kdVal,
-      date: dateVal,
-      note: noteVal
-    });
-  };
-
-  ['txtEditMap', 'txtEditScore', 'txtEditKD', 'txtEditDate', 'txtNoteEdit'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener('change', saveMetadata);
-      el.addEventListener('input', saveMetadata);
-    }
-  });
+  currentEditingDemoPath = null;
 }

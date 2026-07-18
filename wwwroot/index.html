@@ -192,32 +192,22 @@
             </div>
           </div>
 
-          <div class="library-content-split">
-            <div class="table-container">
-              <table class="demo-table">
-                <thead>
-                  <tr>
-                    <th>Карта</th>
-                    <th>Счет</th>
-                    <th>K / D / A</th>
-                    <th>Дата добавления</th>
-                    <th>Заметка</th>
-                    <th>Действия</th>
-                  </tr>
-                </thead>
-                <tbody id="tblDemoBody">
-                  <!-- Demo rows rendered dynamically -->
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Demo Details Panel -->
-            <div class="demo-details-panel" id="pnlDemoDetails">
-              <div class="no-demo-selected">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5; margin-bottom: 8px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                <p>Выберите демо для просмотра деталей и редактирования</p>
-              </div>
-            </div>
+          <div class="table-container">
+            <table class="demo-table">
+              <thead>
+                <tr>
+                  <th>Карта</th>
+                  <th>Счет</th>
+                  <th>K / D / A</th>
+                  <th>Дата добавления</th>
+                  <th>Заметка</th>
+                  <th>Действия</th>
+                </tr>
+              </thead>
+              <tbody id="tblDemoBody">
+                <!-- Demo rows rendered dynamically -->
+              </tbody>
+            </table>
           </div>
 
           <div class="library-footer">
@@ -278,6 +268,44 @@
       </div>
     </footer>
 
+  </div>
+
+  <!-- Edit Demo Modal -->
+  <div class="modal-overlay" id="mdlEditDemo" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Редактирование матча</h3>
+        <button class="modal-close" id="btnMdlClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Карта</label>
+          <input type="text" id="txtEditMap" placeholder="de_mirage">
+        </div>
+        <div class="form-group-row">
+          <div class="form-group">
+            <label>Счет</label>
+            <input type="text" id="txtEditScore" placeholder="13:10">
+          </div>
+          <div class="form-group">
+            <label>K / D / A</label>
+            <input type="text" id="txtEditKD" placeholder="1.25">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Дата добавления</label>
+          <input type="text" id="txtEditDate">
+        </div>
+        <div class="form-group">
+          <label>Заметка</label>
+          <textarea id="txtNoteEdit" rows="3" placeholder="Ваша заметка о матче..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btnMdlCancel">Отмена</button>
+        <button class="btn-primary" id="btnMdlSave">Сохранить</button>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>
