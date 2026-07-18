@@ -156,7 +156,10 @@ namespace FaceitDemoManager
 
         public void PlayDemoByPath(string filePath)
         {
-            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            if (string.IsNullOrEmpty(filePath)) return;
+            filePath = filePath.Replace('/', '\\');
+
+            if (!File.Exists(filePath))
             {
                 MessageBox.Show("Файл демок не найден на диске!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
@@ -695,7 +698,10 @@ namespace FaceitDemoManager
 
         public void CopyDemoConfigToClipboard(string filePath)
         {
-            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) return;
+            if (string.IsNullOrEmpty(filePath)) return;
+            filePath = filePath.Replace('/', '\\');
+
+            if (!File.Exists(filePath)) return;
 
             // Always copy command to clipboard for easy manual play
             string playCmd = "playdemo faceit_demos/General/faceit.dem";

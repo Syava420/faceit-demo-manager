@@ -115,7 +115,12 @@ window.onNativeEvent = function(event) {
       break;
 
     case 'updateDemos':
-      state.demos = event.demos || [];
+      state.demos = (event.demos || []).map(d => {
+        if (d.filePath) {
+          d.filePath = d.filePath.replace(/\\/g, '/');
+        }
+        return d;
+      });
       renderDemos();
       renderMapFilters();
       break;
