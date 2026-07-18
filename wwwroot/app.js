@@ -169,6 +169,18 @@ function setupNavigation() {
   });
 }
 
+function switchTab(tabId) {
+  const targetItem = Array.from(elements.navItems).find(i => i.getAttribute('data-tab') === tabId);
+  if (targetItem) {
+    elements.navItems.forEach(i => i.classList.remove('active'));
+    elements.tabPanes.forEach(p => p.classList.remove('active'));
+
+    targetItem.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+    state.activeTab = tabId;
+  }
+}
+
 // Window Controls
 function setupWindowControls() {
   if (elements.btnWinMinimize) {
@@ -377,9 +389,17 @@ function renderCategories() {
     const folderNick = state.settings.folderNicknames && state.settings.folderNicknames[c.relativePath];
     const nickBadge = folderNick ? ` <span class="category-nick-badge">(${folderNick})</span>` : '';
 
+    const isSelected = state.selectedCategory === c.relativePath;
+    const folderColor = isSelected ? 'var(--primary)' : 'rgba(167, 139, 250, 0.6)';
+    const folderSvg = `
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="${isSelected ? 'rgba(167, 139, 250, 0.25)' : 'none'}" stroke="${folderColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
+        <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+      </svg>
+    `;
+
     item.innerHTML = `
       ${toggleHtml}
-      <span class="category-name">📁 ${c.displayName}${nickBadge}</span>
+      <span class="category-name" style="display: inline-flex; align-items: center;">${folderSvg}${c.displayName}${nickBadge}</span>
     `;
 
     // Click handler on the name/item
@@ -391,6 +411,7 @@ function renderCategories() {
       state.selectedCategory = c.relativePath;
       renderCategories();
       postNativeMessage({ action: 'selectCategory', category: c.relativePath });
+      switchTab('libraryTab');
     });
 
     // Right-click context menu handler
