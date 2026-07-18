@@ -176,8 +176,14 @@ namespace FaceitDemoManager
                 {
                     throw new Exception("Не найден архиватор zstd.exe в папке программы!");
                 }
-                string fileBaseName = Path.GetFileNameWithoutExtension(zstPath); // оставляет .dem
-                extractedPath = Path.Combine(Path.GetDirectoryName(zstPath), fileBaseName);
+
+                string fileBaseName = Path.GetFileNameWithoutExtension(zstPath); // e.g. "xxx.dem"
+                if (!fileBaseName.EndsWith(".dem", StringComparison.OrdinalIgnoreCase))
+                {
+                    fileBaseName += ".dem";
+                }
+                string tempDir = Path.GetTempPath();
+                extractedPath = Path.Combine(tempDir, string.Format("fhub_{0}_{1}", Guid.NewGuid().ToString("N"), fileBaseName));
 
                 if (logCallback != null) logCallback("Распаковка: " + fileName, false);
                 ProcessStartInfo psi = new ProcessStartInfo();
@@ -244,39 +250,35 @@ namespace FaceitDemoManager
             {
                 if (extractedPath.Equals(destPathUnique, StringComparison.OrdinalIgnoreCase))
                 {
-                    // Already in target destination
+                    // Already in destination
                 }
                 else
                 {
-                    File.Move(extractedPath, destPathUnique);
+                    File.Copy(extractedPath, destPathUnique, true);
+                    if (isZst && File.Exists(extractedPath))
+                    {
+                        try { File.Delete(extractedPath); } catch { }
+                    }
                 }
             }
             catch (Exception ex)
             {
-                // Резервный вариант переноса между дисками C: и D:
-                try
-                {
-                    File.Copy(extractedPath, destPathUnique, true);
-                    if (!isZst)
-                    {
-                        File.Delete(extractedPath);
-                    }
-                }
-                catch (Exception copyEx)
-                {
-                    throw new Exception("Не удалось переместить файл: " + ex.Message + " (Копирование тоже сбойнуло: " + copyEx.Message + ")");
-                }
+                throw new Exception("Не удалось сохранить файл демки: " + ex.Message);
             }
 
-            Directory.CreateDirectory(Path.GetDirectoryName(destPathLatest));
-            File.Copy(destPathUnique, destPathLatest, true);
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(destPathLatest));
+                File.Copy(destPathUnique, destPathLatest, true);
+            }
+            catch { }
 
             string relPath = destPathUnique.Substring(baseDemosDir.Length).TrimStart('\\', '/').Replace('\\', '/');
             SaveMetadataForDemo(baseDemosDir, db, relPath, dm);
 
             if (isZst && File.Exists(zstPath) && deleteZstAfter)
             {
-                File.Delete(zstPath);
+                try { File.Delete(zstPath); } catch { }
             }
 
             if (logCallback != null) logCallback("Успешно добавлен матч: " + cleanShortName, false);
