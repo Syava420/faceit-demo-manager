@@ -502,7 +502,7 @@ function renderDemos() {
       <td>${d.date || '-'}</td>
       <td>${d.note || ''}</td>
       <td>
-        <button class="btn-secondary" onclick="event.stopPropagation(); copyDemoConfig('${d.filePath}')">Копировать конфиг</button>
+        <button class="btn-secondary" onclick="event.stopPropagation(); copyDemoConfig('${d.filePath}', this)">Копировать конфиг</button>
       </td>
     `;
     tr.addEventListener('click', () => {
@@ -655,6 +655,21 @@ function showCategoryContextMenu(e, cat) {
   setTimeout(() => document.addEventListener('click', closeMenu), 0);
 }
 
-function copyDemoConfig(filePath) {
+function copyDemoConfig(filePath, btn) {
   postNativeMessage({ action: 'copyDemoConfig', filePath: filePath });
+
+  if (btn) {
+    const originalText = btn.textContent;
+    btn.textContent = '✓ Скопировано!';
+    btn.style.borderColor = '#10b981';
+    btn.style.color = '#10b981';
+    btn.disabled = true;
+
+    setTimeout(() => {
+      btn.textContent = originalText;
+      btn.style.borderColor = '';
+      btn.style.color = '';
+      btn.disabled = false;
+    }, 1500);
+  }
 }
