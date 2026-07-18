@@ -37,15 +37,10 @@ namespace FaceitDemoManager
             string cs2Dir = settings != null && !string.IsNullOrEmpty(settings.CS2Path) ? settings.CS2Path : (txtCS2 != null ? txtCS2.Text.Trim() : "");
             string cs2Exe = Path.Combine(Path.GetDirectoryName(cs2Dir), "bin", "win64", "cs2.exe");
 
-            if (!File.Exists(cs2Exe))
-            {
-                ShowMessageDialog("Ошибка CS2", "Не найден cs2.exe по пути: " + cs2Exe, true);
-                return;
-            }
-
             string baseDir = GetDemosBaseDir();
             // Copy selected demo to target faceit.dem in General
             string destPath = Path.Combine(Path.Combine(baseDir, "General"), "faceit.dem");
+            bool copySuccess = true;
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(destPath));
@@ -53,8 +48,7 @@ namespace FaceitDemoManager
             }
             catch (IOException ioEx) when (ioEx.Message.Contains("used by another process") || ioEx.Message.Contains("занят другим процессом"))
             {
-                ShowMessageDialog("Ошибка запуска", "Файл воспроизведения занят игрой CS2.\n\nЗакройте CS2 или введите команду 'disconnect' в консоли игры, затем попробуйте запустить демку снова.", true);
-                return;
+                copySuccess = false;
             }
             catch (Exception ex)
             {
@@ -101,7 +95,14 @@ namespace FaceitDemoManager
             if (isRunning)
             {
                 lblStatus.Text = "Команда скопирована для запущенной CS2";
-                ShowMessageDialog("Игра уже запущена", "Демка готова! Команда для запуска скопирована в буфер обмена:\n\n" + playCmd + "\n\nПросто откройте консоль в CS2 (~) и нажмите Ctrl+V.");
+                if (!copySuccess)
+                {
+                    ShowMessageDialog("Игра уже запущена", "Демка готова! Команда для запуска скопирована в буфер обмена.\n\nПросто вставьте её в консоль CS2 (нажмите Ctrl+V).\n\n(Файл воспроизведения занят игрой CS2, поэтому воспроизведется старая демка, пока вы не введете 'disconnect' в консоли или не перезапустите CS2).");
+                }
+                else
+                {
+                    ShowMessageDialog("Игра уже запущена", "Демка готова! Команда для запуска скопирована в буфер обмена:\n\n" + playCmd + "\n\nПросто откройте консоль в CS2 (~) и нажмите Ctrl+V.");
+                }
                 return;
             }
 
@@ -137,6 +138,11 @@ namespace FaceitDemoManager
                 }
                 else
                 {
+                    if (!File.Exists(cs2Exe))
+                    {
+                        ShowMessageDialog("Ошибка CS2", "Не найден cs2.exe по пути: " + cs2Exe, true);
+                        return;
+                    }
                     string args = "-steam -game csgo +playdemo faceit_demos/General/faceit.dem" + launchArgs;
                     Process.Start(cs2Exe, args);
                     lblStatus.Text = "Запуск CS2 (Direct): " + Path.GetFileName(file);
