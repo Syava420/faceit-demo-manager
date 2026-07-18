@@ -48,6 +48,7 @@ namespace FaceitDemoManager
         private DataGrid dgvDemos;
         private WrapPanel pnlMapFilters;
         private string selectedMapFilter = null;
+        private string selectedCategory = "General";
         
         // Match Editing Fields
         private TextBox txtEditMap;
@@ -111,6 +112,7 @@ namespace FaceitDemoManager
 
         private void SwitchTab(int tabIndex)
         {
+            if (tabImport == null) return;
             // Reset backgrounds & foregrounds
             tabImport.Background = Brushes.Transparent;
             tabImport.Foreground = Brushes.Gray;
@@ -167,8 +169,15 @@ namespace FaceitDemoManager
         private void AppendLog(string message)
         {
             this.Dispatcher.BeginInvoke(new Action(() => {
-                txtLogConsole.AppendText("[" + DateTime.Now.ToString("HH:mm:ss") + "] " + message + Environment.NewLine);
-                txtLogConsole.ScrollToEnd();
+                if (txtLogConsole != null)
+                {
+                    txtLogConsole.AppendText("[" + DateTime.Now.ToString("HH:mm:ss") + "] " + message + Environment.NewLine);
+                    txtLogConsole.ScrollToEnd();
+                }
+                if (webBridge != null)
+                {
+                    webBridge.SendLog(message);
+                }
             }));
         }
 
@@ -236,7 +245,7 @@ namespace FaceitDemoManager
         {
             string nickname = "";
             this.Dispatcher.Invoke(new Action(() => {
-                nickname = txtNickname.Text.Trim();
+                nickname = txtNickname != null ? txtNickname.Text.Trim() : (settings != null ? settings.Nickname : "");
             }));
 
             if (string.IsNullOrEmpty(nickname))
@@ -260,30 +269,33 @@ namespace FaceitDemoManager
         {
             settings = ConfigManager.Load(configPath);
 
-            txtDownloads.Text = settings.DownloadsPath;
-            txtCS2.Text = settings.CS2Path;
+            if (txtDownloads != null) txtDownloads.Text = settings.DownloadsPath;
+            if (txtCS2 != null) txtCS2.Text = settings.CS2Path;
             
-            ChkWatchFolder.IsChecked = settings.WatchFolder;
-            ChkTray.IsChecked = settings.MinimizeTray;
+            if (ChkWatchFolder != null) ChkWatchFolder.IsChecked = settings.WatchFolder;
+            if (ChkTray != null) ChkTray.IsChecked = settings.MinimizeTray;
             if (chkVoiceInDemos != null) chkVoiceInDemos.IsChecked = settings.EnableDemoVoice;
-            chkAutoApplyBinds.IsChecked = settings.AutoApplyBinds;
+            if (chkAutoApplyBinds != null) chkAutoApplyBinds.IsChecked = settings.AutoApplyBinds;
             if (chkDeleteArchives != null) chkDeleteArchives.IsChecked = settings.DeleteArchivesAfterUnpack;
 
-            dgvBinds.ItemsSource = settings.Binds;
+            if (dgvBinds != null) dgvBinds.ItemsSource = settings.Binds;
 
             // Set Import Mode ComboBox selection
-            foreach (ComboBoxItem item in CboImportMode.Items)
+            if (CboImportMode != null)
             {
-                if (item.Tag.ToString().Equals(settings.ImportMode, StringComparison.OrdinalIgnoreCase))
+                foreach (ComboBoxItem item in CboImportMode.Items)
                 {
-                    CboImportMode.SelectedItem = item;
-                    break;
+                    if (item.Tag.ToString().Equals(settings.ImportMode, StringComparison.OrdinalIgnoreCase))
+                    {
+                        CboImportMode.SelectedItem = item;
+                        break;
+                    }
                 }
             }
 
             // Set Target Import Folder
             UpdateImportFolderCombobox();
-            if (CboImportFolder.Items.Contains(settings.TargetImportFolder))
+            if (CboImportFolder != null && CboImportFolder.Items.Contains(settings.TargetImportFolder))
             {
                 CboImportFolder.SelectedItem = settings.TargetImportFolder;
             }
@@ -296,25 +308,25 @@ namespace FaceitDemoManager
         {
             if (settings == null) settings = new AppSettings();
 
-            settings.DownloadsPath = txtDownloads.Text.Trim();
-            settings.CS2Path = txtCS2.Text.Trim();
+            if (txtDownloads != null) settings.DownloadsPath = txtDownloads.Text.Trim();
+            if (txtCS2 != null) settings.CS2Path = txtCS2.Text.Trim();
             
             // Save global nickname ONLY if we are not editing specific folders
             string importMode = CboImportMode != null && CboImportMode.SelectedItem != null ? ((ComboBoxItem)CboImportMode.SelectedItem).Tag.ToString() : "General";
             if (importMode == "Ask")
             {
-                settings.Nickname = txtNickname.Text.Trim();
+                if (txtNickname != null) settings.Nickname = txtNickname.Text.Trim();
             }
             else if (importMode == "Specific" && CboImportFolder != null && CboImportFolder.SelectedItem != null)
             {
                 string targetFolder = CboImportFolder.SelectedItem.ToString();
                 if (settings.FolderNicknames == null) settings.FolderNicknames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                settings.FolderNicknames[targetFolder] = txtNickname.Text.Trim();
+                if (txtNickname != null) settings.FolderNicknames[targetFolder] = txtNickname.Text.Trim();
             }
             else if (importMode == "General")
             {
                 if (settings.FolderNicknames == null) settings.FolderNicknames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                settings.FolderNicknames["General"] = txtNickname.Text.Trim();
+                if (txtNickname != null) settings.FolderNicknames["General"] = txtNickname.Text.Trim();
             }
             
             string selectedFolder = lstFolders != null && lstFolders.SelectedItem != null ? lstFolders.SelectedItem.ToString() : null;
@@ -330,16 +342,22 @@ namespace FaceitDemoManager
                 }
             }
 
-            settings.WatchFolder = ChkWatchFolder.IsChecked == true;
-            settings.MinimizeTray = ChkTray.IsChecked == true;
+            if (ChkWatchFolder != null) settings.WatchFolder = ChkWatchFolder.IsChecked == true;
+            if (ChkTray != null) settings.MinimizeTray = ChkTray.IsChecked == true;
             if (chkVoiceInDemos != null) settings.EnableDemoVoice = chkVoiceInDemos.IsChecked == true;
-            settings.AutoApplyBinds = chkAutoApplyBinds.IsChecked == true;
+            if (chkAutoApplyBinds != null) settings.AutoApplyBinds = chkAutoApplyBinds.IsChecked == true;
             if (chkDeleteArchives != null) settings.DeleteArchivesAfterUnpack = chkDeleteArchives.IsChecked == true;
 
-            var selectedItem = (ComboBoxItem)CboImportMode.SelectedItem;
-            if (selectedItem != null) settings.ImportMode = selectedItem.Tag.ToString();
+            if (CboImportMode != null)
+            {
+                var selectedItem = (ComboBoxItem)CboImportMode.SelectedItem;
+                if (selectedItem != null) settings.ImportMode = selectedItem.Tag.ToString();
+            }
             
-            settings.TargetImportFolder = CboImportFolder.SelectedItem != null ? CboImportFolder.SelectedItem.ToString() : "General";
+            if (CboImportFolder != null)
+            {
+                settings.TargetImportFolder = CboImportFolder.SelectedItem != null ? CboImportFolder.SelectedItem.ToString() : "General";
+            }
 
             ConfigManager.Save(configPath, settings);
         }

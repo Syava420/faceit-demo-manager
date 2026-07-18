@@ -94,7 +94,7 @@ namespace FaceitDemoManager
         }
 
         // Ввод текста
-        private string ShowInputDialog(string title, string promptText)
+        private string ShowInputDialog(string title, string promptText, string defaultText = "")
         {
             Window w = new Window();
             w.Title = title;
@@ -130,12 +130,13 @@ namespace FaceitDemoManager
             if (lblPrompt != null) lblPrompt.Text = promptText;
 
             TextBox inputTxt = (TextBox)root.FindName("Input");
+            if (inputTxt != null) inputTxt.Text = defaultText;
             Button btnOk = (Button)root.FindName("Ok");
             Button btnCancel = (Button)root.FindName("Cancel");
 
             string result = "";
-            btnOk.Click += (s, e) => { result = inputTxt.Text; w.DialogResult = true; w.Close(); };
-            btnCancel.Click += (s, e) => { w.DialogResult = false; w.Close(); };
+            btnOk.Click += (s, e) => { result = inputTxt.Text; w.DialogResult = true; };
+            btnCancel.Click += (s, e) => { w.DialogResult = false; };
 
             root.MouseLeftButtonDown += (s, e) => { if (e.LeftButton == MouseButtonState.Pressed) w.DragMove(); };
 
@@ -263,9 +264,8 @@ namespace FaceitDemoManager
             btnOk.Click += (s, e) => {
                 result = lstSelect.SelectedItem != null ? lstSelect.SelectedItem.ToString() : "General";
                 w.DialogResult = true;
-                w.Close();
             };
-            btnCancel.Click += (s, e) => { w.DialogResult = false; w.Close(); };
+            btnCancel.Click += (s, e) => { w.DialogResult = false; };
 
             root.MouseLeftButtonDown += (s, e) => { if (e.LeftButton == MouseButtonState.Pressed) w.DragMove(); };
 
@@ -315,8 +315,8 @@ namespace FaceitDemoManager
             Button btnNo = (Button)root.FindName("No");
 
             bool result = false;
-            btnYes.Click += (s, e) => { result = true; w.DialogResult = true; w.Close(); };
-            btnNo.Click += (s, e) => { result = false; w.DialogResult = false; w.Close(); };
+            btnYes.Click += (s, e) => { result = true; w.DialogResult = true; };
+            btnNo.Click += (s, e) => { result = false; w.DialogResult = false; };
 
             root.MouseLeftButtonDown += (s, e) => { if (e.LeftButton == MouseButtonState.Pressed) w.DragMove(); };
 

@@ -20,16 +20,21 @@ namespace FaceitDemoManager
 
         private void PlaySelected()
         {
-            if (dgvDemos.SelectedItem == null)
+            if (dgvDemos == null || dgvDemos.SelectedItem == null)
             {
                 ShowMessageDialog("Информация", "Выберите демо-файл из списка.");
                 return;
             }
 
             DemoGridRow row = (DemoGridRow)dgvDemos.SelectedItem;
-            string file = row.FilePath;
+            PlaySelectedFile(row.FilePath);
+        }
 
-            string cs2Dir = txtCS2.Text.Trim();
+        public void PlaySelectedFile(string file)
+        {
+            if (string.IsNullOrEmpty(file) || !File.Exists(file)) return;
+
+            string cs2Dir = settings != null && !string.IsNullOrEmpty(settings.CS2Path) ? settings.CS2Path : (txtCS2 != null ? txtCS2.Text.Trim() : "");
             string cs2Exe = Path.Combine(Path.GetDirectoryName(cs2Dir), "bin", "win64", "cs2.exe");
 
             if (!File.Exists(cs2Exe))

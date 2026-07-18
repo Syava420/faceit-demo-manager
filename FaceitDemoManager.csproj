@@ -19,6 +19,21 @@
 
   <ItemGroup>
     <Resource Include="app.ico" />
+    <None Include="wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedResource Include="wwwroot\**" LogicalName="wwwroot\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.Web.WebView2.Core">
+      <HintPath>C:\Users\Neuron\.nuget\packages\microsoft.web.webview2\1.0.2903.40\lib_manual\netcoreapp3.0\Microsoft.Web.WebView2.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.WebView2.Wpf">
+      <HintPath>C:\Users\Neuron\.nuget\packages\microsoft.web.webview2\1.0.2903.40\lib_manual\netcoreapp3.0\Microsoft.Web.WebView2.Wpf.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="C:\Users\Neuron\.nuget\packages\microsoft.web.webview2\1.0.2903.40\runtimes\win-x64\native\WebView2Loader.dll" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

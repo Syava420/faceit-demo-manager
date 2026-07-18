@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
@@ -120,6 +121,16 @@ namespace FaceitDemoManager
                 catch { }
             }
 
+            // Auto-detect Downloads path if empty
+            if (string.IsNullOrEmpty(settings.DownloadsPath) || !Directory.Exists(settings.DownloadsPath))
+            {
+                string userDownloads = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+                if (Directory.Exists(userDownloads))
+                {
+                    settings.DownloadsPath = userDownloads;
+                }
+            }
+
             // Auto-detect CS2 path if empty or invalid
             if (string.IsNullOrEmpty(settings.CS2Path) || !Directory.Exists(settings.CS2Path))
             {
@@ -133,39 +144,108 @@ namespace FaceitDemoManager
             return settings;
         }
 
-        public static string AutoDetectCS2Path()
+        public static string AutoDetectCS2Path(Action<string> logAction = null)
         {
-            string steamPath = null;
+            Action<string> log = msg => {
+                try {
+                    logAction?.Invoke(msg);
+                    string logFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FaceitDemoHub", "debug_log.txt");
+                    string logFolder = Path.GetDirectoryName(logFile);
+                    if (!Directory.Exists(logFolder)) Directory.CreateDirectory(logFolder);
+                    File.AppendAllText(logFile, "[" + DateTime.Now.ToString("HH:mm:ss") + "] " + msg + Environment.NewLine);
+                } catch { }
+            };
+
+            log("=== НАЧАЛО АВТОПОИСКА ПАПКИ CS2 ===");
+            List<string> candidates = new List<string>();
+
+            // 1. HKCU Registry
             try
             {
-                steamPath = Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam", "InstallPath", null) as string;
-                if (string.IsNullOrEmpty(steamPath))
+                using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam"))
                 {
-                    steamPath = Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam", "InstallPath", null) as string;
+                    if (key != null)
+                    {
+                        string val = key.GetValue("SteamPath") as string ?? key.GetValue("InstallPath") as string;
+                        if (!string.IsNullOrEmpty(val))
+                        {
+                            string norm = val.Replace('/', '\\');
+                            log("[Реестр HKCU] Найдена запись SteamPath: " + norm);
+                            candidates.Add(norm);
+                        }
+                        else { log("[Реестр HKCU] Ключ Software\\Valve\\Steam существует, но значения пусты."); }
+                    }
+                    else { log("[Реестр HKCU] Ключ Software\\Valve\\Steam не найден."); }
                 }
             }
-            catch { }
+            catch (Exception ex) { log("[Реестр HKCU Ошибка] " + ex.Message); }
 
-            List<string> steamPaths = new List<string>();
-            if (!string.IsNullOrEmpty(steamPath)) steamPaths.Add(steamPath);
-            steamPaths.Add(@"C:\Program Files (x86)\Steam");
-            steamPaths.Add(@"C:\Program Files\Steam");
-            steamPaths.Add(@"D:\Steam");
-            steamPaths.Add(@"E:\Steam");
-            steamPaths.Add(@"D:\Games\Steam");
-
-            foreach (string path in steamPaths)
+            // 2. HKLM Registry (64-bit and 32-bit views)
+            try
             {
-                if (!Directory.Exists(path)) continue;
+                using (var key = Microsoft.Win32.RegistryKey.OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine, Microsoft.Win32.RegistryView.Registry64).OpenSubKey(@"SOFTWARE\Valve\Steam"))
+                {
+                    if (key != null)
+                    {
+                        string val = key.GetValue("InstallPath") as string;
+                        if (!string.IsNullOrEmpty(val)) { log("[Реестр HKLM 64-bit] Найден InstallPath: " + val); candidates.Add(val); }
+                    }
+                }
+            }
+            catch (Exception ex) { log("[Реестр HKLM 64-bit Ошибка] " + ex.Message); }
+
+            try
+            {
+                using (var key = Microsoft.Win32.RegistryKey.OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine, Microsoft.Win32.RegistryView.Registry32).OpenSubKey(@"SOFTWARE\Valve\Steam"))
+                {
+                    if (key != null)
+                    {
+                        string val = key.GetValue("InstallPath") as string;
+                        if (!string.IsNullOrEmpty(val)) { log("[Реестр HKLM 32-bit] Найден InstallPath: " + val); candidates.Add(val); }
+                    }
+                }
+            }
+            catch (Exception ex) { log("[Реестр HKLM 32-bit Ошибка] " + ex.Message); }
+
+            // 3. Known Common Paths
+            candidates.Add(@"C:\Program Files (x86)\Steam");
+            candidates.Add(@"C:\Program Files\Steam");
+            candidates.Add(@"D:\Pro\Steam");
+            candidates.Add(@"D:\Steam");
+            candidates.Add(@"E:\Steam");
+
+            var distinctCandidates = candidates.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            log("[Автопоиск] Список кандидатов папок Steam (" + distinctCandidates.Count + " шт.):");
+            foreach (var c in distinctCandidates) log("  - " + c);
+
+            foreach (string path in distinctCandidates)
+            {
+                if (string.IsNullOrEmpty(path)) continue;
+                if (!Directory.Exists(path))
+                {
+                    log("[Проверка] Каталог не существует: " + path);
+                    continue;
+                }
+
+                log("[Проверка] Каталог Steam найден: " + path);
 
                 // Check default installation
                 string defaultCs2 = Path.Combine(path, @"steamapps\common\Counter-Strike Global Offensive\game\csgo");
-                if (Directory.Exists(defaultCs2)) return defaultCs2;
+                if (Directory.Exists(defaultCs2))
+                {
+                    log("[УСПЕХ] Найдена папка CS2 (game/csgo) по прямому пути -> " + defaultCs2);
+                    return defaultCs2;
+                }
+                else
+                {
+                    log("[Проверка] Прямой путь csgo отсутствует: " + defaultCs2);
+                }
 
                 // Parse secondary library folders
                 string vdfPath = Path.Combine(path, @"steamapps\libraryfolders.vdf");
                 if (File.Exists(vdfPath))
                 {
+                    log("[Проверка] Файл библиотеки libraryfolders.vdf найден: " + vdfPath);
                     try
                     {
                         string[] lines = File.ReadAllLines(vdfPath);
@@ -175,15 +255,48 @@ namespace FaceitDemoManager
                             if (m.Success)
                             {
                                 string libPath = m.Groups[1].Value.Replace(@"\\", @"\");
+                                log("[VDF Библиотека] Проверка пути из vdf: " + libPath);
                                 string cs2Path = Path.Combine(libPath, @"steamapps\common\Counter-Strike Global Offensive\game\csgo");
-                                if (Directory.Exists(cs2Path)) return cs2Path;
+                                if (Directory.Exists(cs2Path))
+                                {
+                                    log("[УСПЕХ] Найдена папка CS2 через libraryfolders.vdf -> " + cs2Path);
+                                    return cs2Path;
+                                }
                             }
                         }
                     }
-                    catch { }
+                    catch (Exception ex) { log("[VDF Ошибка чтения] " + ex.Message); }
                 }
             }
 
+            // 4. Fallback scan across all local drives
+            log("[Автопоиск] Запуск глубокого сканирования по дискам...");
+            try
+            {
+                foreach (var drive in DriveInfo.GetDrives())
+                {
+                    if (!drive.IsReady || drive.DriveType != DriveType.Fixed) continue;
+                    string root = drive.RootDirectory.FullName;
+                    log("[Сканирование диска] " + root);
+                    
+                    string[] possibleSubfolders = new string[] {
+                        @"Pro\Steam", @"Games\Steam", @"Steam", @"SteamLibrary", @"Program Files (x86)\Steam", @"Program Files\Steam"
+                    };
+
+                    foreach (var sub in possibleSubfolders)
+                    {
+                        string target = Path.Combine(root, sub, @"steamapps\common\Counter-Strike Global Offensive\game\csgo");
+                        if (Directory.Exists(target))
+                        {
+                            log("[УСПЕХ] Глубокое сканирование найдено -> " + target);
+                            return target;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) { log("[Сканирование дисков Ошибка] " + ex.Message); }
+
+            log("[ОШИБКА] Папка CS2 (game/csgo) не найдена ни по одному маршруту!");
             return "";
         }
 

@@ -151,13 +151,23 @@ namespace FaceitDemoManager
             Action<string, bool> logCallback,
             bool deleteZstAfter = true)
         {
-            string scriptDir = AppDomain.CurrentDomain.BaseDirectory;
-            string zstdPath = Path.Combine(scriptDir, zstdExeName);
-
-            string baseDemosDir = Path.Combine(cs2Directory, "faceit_demos");
             string fileName = Path.GetFileName(zstPath);
             bool isZst = zstPath.EndsWith(".zst", StringComparison.OrdinalIgnoreCase);
 
+            string scriptDir = AppDomain.CurrentDomain.BaseDirectory;
+            string zstdPath = Path.Combine(scriptDir, zstdExeName);
+
+            if (isZst && !File.Exists(zstdPath))
+            {
+                string fallbackDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FaceitDemoHub");
+                string fallbackPath = Path.Combine(fallbackDir, zstdExeName);
+                if (File.Exists(fallbackPath))
+                {
+                    zstdPath = fallbackPath;
+                }
+            }
+
+            string baseDemosDir = Path.Combine(cs2Directory, "faceit_demos");
             string extractedPath = "";
 
             if (isZst)

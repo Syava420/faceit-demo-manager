@@ -6,6 +6,23 @@ namespace FaceitDemoManager
 {
     public static class LibraryFileService
     {
+        public static List<string> GetCategoryFolders(string baseDir)
+        {
+            var list = new List<string>();
+            list.Add("General");
+            if (Directory.Exists(baseDir))
+            {
+                foreach (string dir in Directory.GetDirectories(baseDir))
+                {
+                    string name = Path.GetFileName(dir);
+                    if (!name.Equals("General", StringComparison.OrdinalIgnoreCase))
+                    {
+                        list.Add(name);
+                    }
+                }
+            }
+            return list;
+        }
         public static void LoadSubfoldersRecursive(
             string baseDir, 
             string relativePath, 

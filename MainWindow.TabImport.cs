@@ -34,14 +34,24 @@ namespace FaceitDemoManager
             string mode = "General";
             string specificFolder = "General";
 
-            this.Dispatcher.Invoke(new Action(() => {
-                var selectedItem = (ComboBoxItem)CboImportMode.SelectedItem;
-                if (selectedItem != null) mode = selectedItem.Tag.ToString();
-                specificFolder = CboImportFolder.SelectedItem != null ? CboImportFolder.SelectedItem.ToString() : "General";
-            }));
+            if (CboImportMode != null)
+            {
+                this.Dispatcher.Invoke(new Action(() => {
+                    var selectedItem = (ComboBoxItem)CboImportMode.SelectedItem;
+                    if (selectedItem != null) mode = selectedItem.Tag.ToString();
+                    specificFolder = CboImportFolder != null && CboImportFolder.SelectedItem != null 
+                        ? CboImportFolder.SelectedItem.ToString() 
+                        : "General";
+                }));
+            }
+            else if (settings != null)
+            {
+                mode = settings.ImportMode ?? "General";
+                specificFolder = settings.TargetImportFolder ?? "General";
+            }
 
             if (mode == "General") return "General";
-            if (mode == "Specific") return specificFolder;
+            if (mode == "Specific" || mode == "TargetFolder") return specificFolder;
 
             // Ask mode (Interactive)
             string chosen = this.Dispatcher.Invoke(() => ShowSelectFolderDialog("Куда распаковать демку: " + Path.GetFileName(fileName)));
@@ -53,9 +63,9 @@ namespace FaceitDemoManager
         {
             SwitchTab(0);
             
-            string cs2 = txtCS2.Text.Trim();
+            string cs2 = txtCS2 != null ? txtCS2.Text.Trim() : (settings != null ? settings.CS2Path : "");
 
-            btnProcess.IsEnabled = false;
+            if (btnProcess != null) btnProcess.IsEnabled = false;
             AppendLog("Начало обработки файлов...");
 
             Thread thread = new Thread(() =>
@@ -75,11 +85,14 @@ namespace FaceitDemoManager
                         }
 
                         // Determine nickname contextually
-                        string nickForImport = settings.Nickname;
-                        string folderNick;
-                        if (!string.IsNullOrEmpty(targetCategory) && settings.FolderNicknames != null && settings.FolderNicknames.TryGetValue(targetCategory, out folderNick) && !string.IsNullOrEmpty(folderNick))
+                        string nickForImport = "";
+                        if (targetCategory == "General")
                         {
-                            nickForImport = folderNick;
+                            nickForImport = settings.Nickname;
+                        }
+                        else
+                        {
+                            nickForImport = GetFolderNicknameRecursive(targetCategory);
                         }
 
                         try
@@ -100,7 +113,7 @@ namespace FaceitDemoManager
                 }
 
                 this.Dispatcher.BeginInvoke(new Action(() => {
-                    btnProcess.IsEnabled = true;
+                    if (btnProcess != null) btnProcess.IsEnabled = true;
                     AppendLog(string.Format("Обработка завершена. Успешно импортировано: {0}/{1}", successCount, totalCount));
                     RefreshFolders();
                     RefreshDemoList();
@@ -110,9 +123,17 @@ namespace FaceitDemoManager
             thread.Start();
         }
 
-        private void BtnProcess_Click(object sender, RoutedEventArgs e)
+        public void ImportSingleFile(string filePath)
         {
-            string downloads = txtDownloads.Text.Trim();
+            if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+            {
+                ProcessManualFiles(new[] { filePath });
+            }
+        }
+
+        public void ProcessDownloadsFolderLogic()
+        {
+            string downloads = settings != null && !string.IsNullOrEmpty(settings.DownloadsPath) ? settings.DownloadsPath : (txtDownloads != null ? txtDownloads.Text.Trim() : "");
             if (!Directory.Exists(downloads))
             {
                 AppendLog("Ошибка: Неверный путь к папке загрузок!");
@@ -129,6 +150,11 @@ namespace FaceitDemoManager
             ProcessManualFiles(files);
         }
 
+        private void BtnProcess_Click(object sender, RoutedEventArgs e)
+        {
+            ProcessDownloadsFolderLogic();
+        }
+
         private void ToggleWatcherSetting(bool enabled)
         {
             if (dlWatcher != null)
@@ -141,12 +167,13 @@ namespace FaceitDemoManager
         {
             try
             {
-                string downloads = txtDownloads.Text.Trim();
+                string downloads = txtDownloads != null ? txtDownloads.Text.Trim() : (settings != null ? settings.DownloadsPath : "");
                 if (Directory.Exists(downloads))
                 {
                     dlWatcher = new FileSystemWatcher(downloads, "*.dem.zst");
                     dlWatcher.Created += DlWatcher_Created;
-                    dlWatcher.EnableRaisingEvents = ChkWatchFolder.IsChecked == true;
+                    bool isChecked = ChkWatchFolder != null ? ChkWatchFolder.IsChecked == true : (settings != null ? settings.WatchFolder : false);
+                    dlWatcher.EnableRaisingEvents = isChecked;
                 }
             }
             catch (Exception ex)
@@ -162,7 +189,7 @@ namespace FaceitDemoManager
             
             string cs2 = "";
             this.Dispatcher.Invoke(new Action(() => {
-                cs2 = txtCS2.Text.Trim();
+                cs2 = txtCS2 != null ? txtCS2.Text.Trim() : (settings != null ? settings.CS2Path : "");
             }));
 
             string targetCategory = DetermineImportFolder(e.FullPath);
@@ -173,11 +200,14 @@ namespace FaceitDemoManager
             }
 
             // Determine nickname contextually for auto-scanned import
-            string nickForImport = settings.Nickname;
-            string folderNick;
-            if (!string.IsNullOrEmpty(targetCategory) && settings.FolderNicknames != null && settings.FolderNicknames.TryGetValue(targetCategory, out folderNick) && !string.IsNullOrEmpty(folderNick))
+            string nickForImport = "";
+            if (targetCategory == "General")
             {
-                nickForImport = folderNick;
+                nickForImport = settings.Nickname;
+            }
+            else
+            {
+                nickForImport = GetFolderNicknameRecursive(targetCategory);
             }
 
             try

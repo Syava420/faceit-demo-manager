@@ -249,17 +249,20 @@ namespace FaceitDemoManager
             Button btn = new Button();
             btn.Content = (mapName == null) ? "Все карты" : mapName;
             
-            // Resolve XAML style starting from the root Border content
-            Style style = null;
-            FrameworkElement contentElement = this.Content as FrameworkElement;
-            if (contentElement != null)
+            try
             {
-                style = contentElement.TryFindResource(isActive ? "MapFilterBtnActiveStyle" : "MapFilterBtnStyle") as Style;
+                Style style = null;
+                FrameworkElement contentElement = this.Content as FrameworkElement;
+                if (contentElement != null)
+                {
+                    style = contentElement.TryFindResource(isActive ? "MapFilterBtnActiveStyle" : "MapFilterBtnStyle") as Style;
+                }
+                if (style != null)
+                {
+                    btn.Style = style;
+                }
             }
-            if (style != null)
-            {
-                btn.Style = style;
-            }
+            catch { }
 
             btn.Click += (s, e) => {
                 selectedMapFilter = mapName;
@@ -583,6 +586,10 @@ namespace FaceitDemoManager
                         cs2Dir = txtCS2.Text.Trim();
                     }));
                 }
+            }
+            if (string.IsNullOrEmpty(cs2Dir) && settings != null)
+            {
+                cs2Dir = settings.CS2Path;
             }
             if (string.IsNullOrEmpty(cs2Dir)) return "";
             return Path.Combine(cs2Dir, "faceit_demos");

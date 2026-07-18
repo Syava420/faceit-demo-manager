@@ -13,7 +13,6 @@ Write-Host "Compiling FaceitDemoManager WPF Application using .NET 8.0 SDK..." -
 
 # Clean previous build artifacts
 if (Test-Path "bin") { Remove-Item -Path "bin" -Recurse -Force -ErrorAction SilentlyContinue }
-if (Test-Path "obj") { Remove-Item -Path "obj" -Recurse -Force -ErrorAction SilentlyContinue }
 if (Test-Path $output) { Remove-Item -Path $output -Force -ErrorAction SilentlyContinue }
 
 # Run dotnet publish with SingleFile and ReadyToRun optimizations
@@ -23,6 +22,7 @@ $publishExe = "bin\Release\net8.0-windows\win-x64\publish\FaceitDemoManager.exe"
 
 if (Test-Path $publishExe) {
     Copy-Item -Path $publishExe -Destination $output -Force
+    if (Test-Path "wwwroot") { Copy-Item -Path "wwwroot" -Destination "C:\Users\Neuron\.gemini\antigravity\scratch\faceit-demo-manager\wwwroot" -Recurse -Force }
     Write-Host "Compilation successful!" -ForegroundColor Green
     Write-Host "Output file: $output" -ForegroundColor Green
 } else {

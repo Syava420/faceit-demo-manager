@@ -125,8 +125,11 @@ namespace FaceitDemoHubInstaller
                     UpdateStatus("Распаковка FaceitDemoManager.exe...", 30);
                     ExtractResource("FaceitDemoManager.exe", Path.Combine(destDir, "FaceitDemoManager.exe"));
 
-                    UpdateStatus("Распаковка zstd.exe...", 60);
+                    UpdateStatus("Распаковка zstd.exe...", 50);
                     ExtractResource("zstd.exe", Path.Combine(destDir, "zstd.exe"));
+
+                    UpdateStatus("Распаковка ресурсов веб-интерфейса...", 70);
+                    ExtractAllWwwrootResources(destDir);
 
                     bool makeShortcut = false;
                     bool launchApp = false;
@@ -200,6 +203,22 @@ namespace FaceitDemoHubInstaller
                 using (FileStream fs = new FileStream(destPath, FileMode.Create, FileAccess.Write))
                 {
                     stream.CopyTo(fs);
+                }
+            }
+        }
+
+        private void ExtractAllWwwrootResources(string destDir)
+        {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            foreach (string name in assembly.GetManifestResourceNames())
+            {
+                if (name.StartsWith("wwwroot", StringComparison.OrdinalIgnoreCase))
+                {
+                    string relativePath = name.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
+                    string targetPath = Path.Combine(destDir, relativePath);
+                    string targetFolder = Path.GetDirectoryName(targetPath);
+                    if (!Directory.Exists(targetFolder)) Directory.CreateDirectory(targetFolder);
+                    ExtractResource(name, targetPath);
                 }
             }
         }

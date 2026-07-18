@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <AssemblyName>Setup</AssemblyName>
+    <LangVersion>12</LangVersion>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+
+  <!-- Compile only Installer.cs, exclude other files -->
+  <ItemGroup>
+    <Compile Remove="**/*.cs" />
+    <Compile Include="Installer.cs" />
+  </ItemGroup>
+
+  <!-- Embed dependencies as resources -->
+  <ItemGroup>
+    <EmbeddedResource Include="FaceitDemoManager.exe" LogicalName="FaceitDemoManager.exe" />
+    <EmbeddedResource Include="zstd.exe" LogicalName="zstd.exe" />
+    <EmbeddedResource Include="wwwroot\**" LogicalName="wwwroot\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FACEIT Demo Hub</title>
+  <link rel="stylesheet" href="index.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Titlebar -->
+    <header class="titlebar" id="titlebar">
+      <div class="titlebar-brand">
+        <img src="app_icon.png" alt="Icon" class="app-icon" onerror="this.style.display='none'">
+        <span class="app-title">FACEIT DEMO HUB</span>
+      </div>
+      <div class="titlebar-controls">
+        <button class="win-btn win-minimize" id="btnWinMinimize" title="Свернуть">
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <line x1="0" y1="5" x2="10" y2="5" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+        </button>
+        <button class="win-btn win-close" id="btnWinClose" title="Закрыть">
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <line x1="1.5" y1="1.5" x2="8.5" y2="8.5" stroke="currentColor" stroke-width="1.2"/>
+            <line x1="8.5" y1="1.5" x2="1.5" y2="8.5" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <div class="main-layout">
+      
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        
+        <!-- User Profile Card -->
+        <div class="user-profile-card">
+          <div class="avatar-container">
+            <img id="userAvatar" src="https://assets.faceit-cdn.net/avatars/default_avatar.jpg" alt="Avatar" class="user-avatar">
+            <span class="level-badge" id="userLevelBadge">--</span>
+          </div>
+          <div class="user-info">
+            <div class="user-nickname" id="userNickDisplay">Загрузка...</div>
+            <div class="user-elo"><span class="elo-label">ELO</span> <span id="userEloDisplay">----</span></div>
+          </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="nav-menu">
+          <button class="nav-item active" data-tab="importTab">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+            <span>Импорт & Настройки</span>
+          </button>
+          <button class="nav-item" data-tab="libraryTab">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16" stroke="currentColor" stroke-width="2"/></svg>
+            <span>Библиотека Демок</span>
+          </button>
+          <button class="nav-item" data-tab="bindsTab">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+            <span>Кастомные Бинды</span>
+          </button>
+        </nav>
+
+        <!-- Categories Section -->
+        <div class="sidebar-categories" id="sidebarCategories">
+          <div class="categories-header">
+            <span>Категории</span>
+            <button class="btn-icon-sm" id="btnNewCategory" title="Новая категория">+</button>
+          </div>
+          <div class="categories-list" id="categoriesList">
+            <!-- Folder items rendered dynamically -->
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- Content Views -->
+      <main class="content-area">
+        
+        <!-- TAB 1: IMPORT & SETTINGS -->
+        <section class="tab-pane active" id="importTab">
+          
+          <div class="drag-drop-zone" id="dropZone">
+            <div class="drop-zone-content">
+              <div class="drop-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.5"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+              </div>
+              <h3>Перетащите `.dem.zst` или архивы сюда</h3>
+              <p>Файлы автоматически распакуются и импортируются в выбранную категорию</p>
+            </div>
+          </div>
+
+          <div class="settings-grid">
+            <div class="setting-group">
+              <label>Папка загрузок</label>
+              <div class="input-with-button">
+                <input type="text" id="txtDownloads" placeholder="Путь к папке Downloads">
+                <button class="btn-secondary" id="btnBrowseDownloads">Обзор</button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label>Папка CS2 (game/csgo)</label>
+              <div class="input-with-button">
+                <input type="text" id="txtCS2" placeholder="Путь к CS2">
+                <button class="btn-secondary" id="btnAutoCS2">Авто</button>
+                <button class="btn-secondary" id="btnBrowseCS2">Обзор</button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label>Никнейм на FACEIT</label>
+              <input type="text" id="txtNickname" placeholder="Введите ваш никнейм">
+            </div>
+
+            <div class="setting-group row-group">
+              <div class="select-box">
+                <label>Режим импорта</label>
+                <select id="cboImportMode">
+                  <option value="General">Все в General</option>
+                  <option value="TargetFolder">В выбранную папку</option>
+                  <option value="ByPlayer">Сортировать по игроку</option>
+                </select>
+              </div>
+
+              <div class="select-box" id="targetFolderContainer">
+                <label>Целевая папка</label>
+                <select id="cboImportFolder">
+                  <!-- Categories options -->
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="toggles-grid">
+            <label class="toggle-control">
+              <input type="checkbox" id="chkWatchFolder">
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Автозагрузка демок из Загрузок</span>
+            </label>
+            
+            <label class="toggle-control">
+              <input type="checkbox" id="chkTray">
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Сворачивать в трей</span>
+            </label>
+
+            <label class="toggle-control">
+              <input type="checkbox" id="chkVoiceInDemos">
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Голосовой чат в демках (GOTV)</span>
+            </label>
+
+            <label class="toggle-control">
+              <input type="checkbox" id="chkDeleteArchives">
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Удалять архивы после распаковки</span>
+            </label>
+          </div>
+
+          <div class="action-bar">
+            <button class="btn-primary btn-lg" id="btnProcess">Обработать демки из Загрузок</button>
+          </div>
+
+          <div class="log-console-container">
+            <div class="log-header">
+              <span>Лог обработки</span>
+              <button class="btn-ghost-sm" id="btnClearLog">Очистить лог</button>
+            </div>
+            <textarea id="txtLogConsole" readonly placeholder="Лог работы приложения..."></textarea>
+          </div>
+
+        </section>
+
+        <!-- TAB 2: DEMO LIBRARY -->
+        <section class="tab-pane" id="libraryTab">
+          
+          <div class="library-toolbar">
+            <div class="search-box">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <input type="text" id="txtSearch" placeholder="Поиск по карте, счету, заметке...">
+            </div>
+
+            <div class="map-filters" id="pnlMapFilters">
+              <!-- Dynamic map filter chips -->
+            </div>
+          </div>
+
+          <div class="library-content-split">
+            <div class="table-container">
+              <table class="demo-table">
+                <thead>
+                  <tr>
+                    <th>Карта</th>
+                    <th>Счет</th>
+                    <th>K / D / A</th>
+                    <th>Дата добавления</th>
+                    <th>Заметка</th>
+                    <th>Действия</th>
+                  </tr>
+                </thead>
+                <tbody id="tblDemoBody">
+                  <!-- Demo rows rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Demo Details Panel -->
+            <div class="demo-details-panel" id="pnlDemoDetails">
+              <div class="no-demo-selected">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5; margin-bottom: 8px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <p>Выберите демо для просмотра деталей и редактирования</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="library-footer">
+            <button class="btn-success btn-lg" id="btnPlay">▶ Просмотреть демо в CS2</button>
+            <button class="btn-secondary" id="btnMoveDemo">Перенести выбранные</button>
+            <button class="btn-danger" id="btnDeleteDemo">Удалить выбранные</button>
+          </div>
+
+        </section>
+
+        <!-- TAB 3: CUSTOM BINDS -->
+        <section class="tab-pane" id="bindsTab">
+          
+          <div class="binds-header">
+            <div>
+              <h2>Кастомные Горячие Клавиши</h2>
+              <p>Управляйте биндами просмотра демок в CS2</p>
+            </div>
+            <label class="toggle-control">
+              <input type="checkbox" id="chkAutoApplyBinds">
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Автоматически применять бинды</span>
+            </label>
+          </div>
+
+          <div class="table-container">
+            <table class="binds-table">
+              <thead>
+                <tr>
+                  <th>Вкл</th>
+                  <th>Название действия</th>
+                  <th>Клавиша</th>
+                  <th>Команда в CS2</th>
+                  <th>Удалить</th>
+                </tr>
+              </thead>
+              <tbody id="tblBindsBody">
+                <!-- Binds rows rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="binds-actions">
+            <button class="btn-primary" id="btnAddBind">+ Добавить бинд</button>
+            <button class="btn-secondary" id="btnResetBinds">Сбросить бинды по умолчанию</button>
+          </div>
+
+        </section>
+
+      </main>
+    </div>
+
+    <!-- Status Footer -->
+    <footer class="status-footer">
+      <span class="status-text" id="lblStatus">Готово</span>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="prgBarFill" style="width: 0%;"></div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
