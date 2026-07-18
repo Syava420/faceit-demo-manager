@@ -697,25 +697,6 @@ namespace FaceitDemoManager
         {
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) return;
 
-            string baseDir = GetDemosBaseDir();
-            // Copy selected demo to target faceit.dem in General
-            string destPath = Path.Combine(Path.Combine(baseDir, "General"), "faceit.dem");
-            try
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(destPath));
-                File.Copy(filePath, destPath, true);
-            }
-            catch (IOException ioEx) when (ioEx.Message.Contains("used by another process") || ioEx.Message.Contains("занят другим процессом"))
-            {
-                ShowMessageDialog("Ошибка копирования", "Файл воспроизведения занят игрой CS2.\n\nЗакройте CS2 или введите команду 'disconnect' в консоли игры, затем попробуйте снова.", true);
-                return;
-            }
-            catch (Exception ex)
-            {
-                AppendLog("Ошибка подготовки копирования конфига: " + ex.Message);
-                return;
-            }
-
             // Always copy command to clipboard for easy manual play
             string playCmd = "playdemo faceit_demos/General/faceit.dem";
             if (settings.EnableDemoVoice)
@@ -745,6 +726,23 @@ namespace FaceitDemoManager
             catch (Exception ex)
             {
                 AppendLog("Не удалось скопировать в буфер обмена: " + ex.Message);
+            }
+
+            // Try to copy file to General/faceit.dem, but don't fail config copy if it is locked
+            string baseDir = GetDemosBaseDir();
+            string destPath = Path.Combine(Path.Combine(baseDir, "General"), "faceit.dem");
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(destPath));
+                File.Copy(filePath, destPath, true);
+            }
+            catch (IOException ioEx) when (ioEx.Message.Contains("used by another process") || ioEx.Message.Contains("занят другим процессом"))
+            {
+                AppendLog("Предупреждение: faceit.dem занят игрой CS2. Новая демка будет доступна после ввода disconnect/выхода из игры.");
+            }
+            catch (Exception ex)
+            {
+                AppendLog("Ошибка копирования файла демки: " + ex.Message);
             }
         }
     }
