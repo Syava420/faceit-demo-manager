@@ -109,44 +109,26 @@ namespace FaceitDemoManager
             string voiceArgs = settings.EnableDemoVoice ? " +tv_listen_voice_indices -1 +tv_listen_voice_indices_h -1" : "";
             string launchArgs = voiceArgs + bindArgs;
 
-            string steamExe = "";
-            try
+            if (!File.Exists(cs2Exe))
             {
-                using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam"))
-                {
-                    if (key != null)
-                    {
-                        string val = key.GetValue("SteamExe") as string;
-                        if (!string.IsNullOrEmpty(val)) steamExe = Path.GetFullPath(val);
-                    }
-                }
-            }
-            catch { }
-
-            if (string.IsNullOrEmpty(steamExe) || !File.Exists(steamExe))
-            {
-                steamExe = @"C:\Program Files (x86)\Steam\steam.exe";
+                ShowMessageDialog("Ошибка CS2", "Не найден cs2.exe по пути: " + cs2Exe, true);
+                return;
             }
 
             try
             {
-                if (File.Exists(steamExe))
+                string args = "-steam -game csgo +playdemo faceit_demos/General/faceit.dem" + launchArgs;
+                ProcessStartInfo psi = new ProcessStartInfo
                 {
-                    string args = string.Format("-applaunch 730 -steam -game csgo +playdemo faceit_demos/General/faceit.dem{0}", launchArgs);
-                    Process.Start(steamExe, args);
-                    lblStatus.Text = "Запуск CS2 (Steam): " + Path.GetFileName(file);
-                }
-                else
-                {
-                    if (!File.Exists(cs2Exe))
-                    {
-                        ShowMessageDialog("Ошибка CS2", "Не найден cs2.exe по пути: " + cs2Exe, true);
-                        return;
-                    }
-                    string args = "-steam -game csgo +playdemo faceit_demos/General/faceit.dem" + launchArgs;
-                    Process.Start(cs2Exe, args);
-                    lblStatus.Text = "Запуск CS2 (Direct): " + Path.GetFileName(file);
-                }
+                    FileName = cs2Exe,
+                    Arguments = args,
+                    WorkingDirectory = Path.GetDirectoryName(cs2Exe),
+                    UseShellExecute = false
+                };
+                psi.EnvironmentVariables["SteamAppId"] = "730";
+
+                Process.Start(psi);
+                lblStatus.Text = "Запуск CS2: " + Path.GetFileName(file);
             }
             catch (Exception ex)
             {
