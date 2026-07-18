@@ -53,58 +53,98 @@ namespace FaceitDemoManager
                 ClipToBounds = true
             };
 
-            container.AllowDrop = true;
-            container.DragOver += (s, e) =>
+            Action<DragEventArgs> handleDragOver = (e) =>
             {
-                if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                if (e.Data.GetDataPresent(DataFormats.FileDrop) ||
+                    e.Data.GetDataPresent(DataFormats.Text) ||
+                    e.Data.GetDataPresent(DataFormats.UnicodeText) ||
+                    e.Data.GetDataPresent("text/uri-list"))
                 {
-                    e.Effects = DragDropEffects.Copy | DragDropEffects.Move;
-                    e.Handled = true;
+                    e.Effects = DragDropEffects.Copy | DragDropEffects.Link | DragDropEffects.Move;
                 }
+                else
+                {
+                    e.Effects = DragDropEffects.None;
+                }
+                e.Handled = true;
             };
-            container.Drop += (s, e) =>
+
+            Action<DragEventArgs> handleDrop = (e) =>
             {
+                e.Handled = true;
+                var files = new System.Collections.Generic.List<string>();
+
                 if (e.Data.GetDataPresent(DataFormats.FileDrop))
                 {
-                    string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                    if (files != null && files.Length > 0)
-                    {
-                        ProcessManualFiles(files);
-                    }
-                    e.Handled = true;
+                    string[] fArr = e.Data.GetData(DataFormats.FileDrop) as string[];
+                    if (fArr != null) files.AddRange(fArr);
+                }
+
+                if (files.Count == 0 && e.Data.GetDataPresent("text/uri-list"))
+                {
+                    string text = e.Data.GetData("text/uri-list") as string;
+                    ParsePathsFromText(text, files);
+                }
+
+                if (files.Count == 0 && e.Data.GetDataPresent(DataFormats.UnicodeText))
+                {
+                    string text = e.Data.GetData(DataFormats.UnicodeText) as string;
+                    ParsePathsFromText(text, files);
+                }
+
+                if (files.Count == 0 && e.Data.GetDataPresent(DataFormats.Text))
+                {
+                    string text = e.Data.GetData(DataFormats.Text) as string;
+                    ParsePathsFromText(text, files);
+                }
+
+                if (files.Count > 0)
+                {
+                    ProcessManualFiles(files.ToArray());
                 }
             };
 
+            container.AllowDrop = true;
+            container.DragOver += (s, e) => handleDragOver(e);
+            container.Drop += (s, e) => handleDrop(e);
+
             webView = new Microsoft.Web.WebView2.Wpf.WebView2();
-            
-            // Register native WPF Drag & Drop handlers on WebView2 control to bypass chromium sandbox blocks on Drag & Drop file path retrieval
             webView.AllowDrop = true;
-            webView.DragOver += (s, e) =>
-            {
-                if (e.Data.GetDataPresent(DataFormats.FileDrop))
-                {
-                    e.Effects = DragDropEffects.Copy | DragDropEffects.Move;
-                    e.Handled = true;
-                }
-            };
-            webView.Drop += (s, e) =>
-            {
-                if (e.Data.GetDataPresent(DataFormats.FileDrop))
-                {
-                    string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                    if (files != null && files.Length > 0)
-                    {
-                        ProcessManualFiles(files);
-                    }
-                    e.Handled = true;
-                }
-            };
+            webView.DragOver += (s, e) => handleDragOver(e);
+            webView.Drop += (s, e) => handleDrop(e);
 
             container.Child = webView;
             this.Content = container;
 
             // Event Bindings
             this.Closing += MainWindow_Closing;
+        }
+
+        private void ParsePathsFromText(string text, System.Collections.Generic.List<string> outputFiles)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+            string[] lines = text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string line in lines)
+            {
+                string raw = line.Trim();
+                if (raw.StartsWith("file:///", StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        Uri uri = new Uri(raw);
+                        string localPath = uri.LocalPath;
+                        if (File.Exists(localPath) || Directory.Exists(localPath))
+                        {
+                            outputFiles.Add(localPath);
+                        }
+                    }
+                    catch { }
+                }
+                else if (File.Exists(raw) || Directory.Exists(raw))
+                {
+                    outputFiles.Add(raw);
+                }
+            }
         }
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -122,6 +162,15 @@ namespace FaceitDemoManager
                     wwwrootPath,
                     CoreWebView2HostResourceAccessKind.Allow
                 );
+
+                webView.CoreWebView2.NavigationStarting += (s, navArgs) =>
+                {
+                    if (!navArgs.Uri.StartsWith("https://app.assets", StringComparison.OrdinalIgnoreCase) &&
+                        !navArgs.Uri.StartsWith("http://app.assets", StringComparison.OrdinalIgnoreCase))
+                    {
+                        navArgs.Cancel = true;
+                    }
+                };
 
                 webBridge = new WebBridge(this, webView.CoreWebView2);
                 webView.Source = new Uri("https://app.assets/index.html");
