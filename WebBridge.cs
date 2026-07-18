@@ -213,6 +213,32 @@ namespace FaceitDemoManager
                         }
                     }
                     break;
+                case "deleteSelectedDemos":
+                    {
+                        if (root.TryGetProperty("filePaths", out JsonElement pathsProp) && pathsProp.ValueKind == JsonValueKind.Array)
+                        {
+                            var list = new System.Collections.Generic.List<string>();
+                            foreach (var p in pathsProp.EnumerateArray())
+                            {
+                                list.Add(p.GetString());
+                            }
+                            _mainWindow.DeleteDemosWeb(list);
+                        }
+                    }
+                    break;
+                case "moveSelectedDemos":
+                    {
+                        if (root.TryGetProperty("filePaths", out JsonElement pathsProp) && pathsProp.ValueKind == JsonValueKind.Array)
+                        {
+                            var list = new System.Collections.Generic.List<string>();
+                            foreach (var p in pathsProp.EnumerateArray())
+                            {
+                                list.Add(p.GetString());
+                            }
+                            _mainWindow.MoveSelectedDemosWebPrompt(list);
+                        }
+                    }
+                    break;
             }
         }
 

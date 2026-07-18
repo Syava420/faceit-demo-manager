@@ -6,7 +6,10 @@ const state = {
   demos: [],
   categories: ['General'],
   binds: [],
-  settings: {}
+  settings: {},
+  selectedDemos: [],
+  selectedDemoPath: null,
+  lastClickedDemoPath: null
 };
 
 // DOM Elements
@@ -121,6 +124,8 @@ window.onNativeEvent = function(event) {
         }
         return d;
       });
+      state.selectedDemos = state.selectedDemos.filter(path => state.demos.some(d => d.filePath === path));
+      state.selectedDemoPath = state.selectedDemos[0] || null;
       renderDemos();
       renderMapFilters();
       break;
@@ -347,6 +352,14 @@ function getFolderNickname(folderPath, customSettings) {
   document.getElementById('btnClearLog')?.addEventListener('click', () => { if (elements.txtLogConsole) elements.txtLogConsole.value = ''; });
   document.getElementById('btnPlay')?.addEventListener('click', playSelectedDemo);
   document.getElementById('btnNewCategory')?.addEventListener('click', () => postNativeMessage({ action: 'createCategory' }));
+  document.getElementById('btnMoveDemo')?.addEventListener('click', () => {
+    if (!state.selectedDemos || state.selectedDemos.length === 0) return;
+    postNativeMessage({ action: 'moveSelectedDemos', filePaths: state.selectedDemos });
+  });
+  document.getElementById('btnDeleteDemo')?.addEventListener('click', () => {
+    if (!state.selectedDemos || state.selectedDemos.length === 0) return;
+    postNativeMessage({ action: 'deleteSelectedDemos', filePaths: state.selectedDemos });
+  });
 
   // Binds Actions
   document.getElementById('btnAddBind')?.addEventListener('click', () => {
@@ -516,6 +529,12 @@ function renderDemos() {
   filtered.forEach(d => {
     const tr = document.createElement('tr');
     tr.setAttribute('draggable', 'true');
+    tr.setAttribute('data-filepath', d.filePath);
+    
+    if (state.selectedDemos.includes(d.filePath)) {
+      tr.classList.add('selected');
+    }
+
     tr.innerHTML = `
       <td><strong>${d.mapEmoji || '🗺️'} ${d.map || 'Unknown'}</strong></td>
       <td>${d.score || '-'}</td>
@@ -526,10 +545,55 @@ function renderDemos() {
         <button class="btn-secondary" onclick="event.stopPropagation(); copyDemoConfig('${d.filePath}', this)">Копировать конфиг</button>
       </td>
     `;
-    tr.addEventListener('click', () => {
-      document.querySelectorAll('.demo-table tr').forEach(r => r.classList.remove('selected'));
-      tr.classList.add('selected');
-      state.selectedDemoPath = d.filePath;
+    tr.addEventListener('click', (e) => {
+      // If Shift-click
+      if (e.shiftKey && state.lastClickedDemoPath) {
+        const allRows = Array.from(elements.tblDemoBody.querySelectorAll('tr'));
+        const currentIndex = allRows.findIndex(r => r.getAttribute('data-filepath') === d.filePath);
+        const lastIndex = allRows.findIndex(r => r.getAttribute('data-filepath') === state.lastClickedDemoPath);
+        
+        if (currentIndex !== -1 && lastIndex !== -1) {
+          const start = Math.min(currentIndex, lastIndex);
+          const end = Math.max(currentIndex, lastIndex);
+          
+          if (!e.ctrlKey) {
+            state.selectedDemos = [];
+          }
+          
+          for (let i = start; i <= end; i++) {
+            const path = allRows[i].getAttribute('data-filepath');
+            if (path && !state.selectedDemos.includes(path)) {
+              state.selectedDemos.push(path);
+            }
+          }
+        }
+      }
+      // If Ctrl-click (Cmd-click on Mac, but user is on Windows)
+      else if (e.ctrlKey) {
+        const idx = state.selectedDemos.indexOf(d.filePath);
+        if (idx !== -1) {
+          state.selectedDemos.splice(idx, 1);
+        } else {
+          state.selectedDemos.push(d.filePath);
+        }
+      }
+      // Regular single click
+      else {
+        state.selectedDemos = [d.filePath];
+      }
+
+      state.selectedDemoPath = state.selectedDemos[0] || null;
+      state.lastClickedDemoPath = d.filePath;
+      
+      // Update visual selection states
+      elements.tblDemoBody.querySelectorAll('tr').forEach(r => {
+        const path = r.getAttribute('data-filepath');
+        if (state.selectedDemos.includes(path)) {
+          r.classList.add('selected');
+        } else {
+          r.classList.remove('selected');
+        }
+      });
     });
     tr.addEventListener('dblclick', () => {
       playSingleDemo(d.filePath);
@@ -541,9 +605,8 @@ function renderDemos() {
     elements.tblDemoBody.appendChild(tr);
   });
 
-  if (state.selectedDemoPath && !filtered.some(x => x.filePath === state.selectedDemoPath)) {
-    state.selectedDemoPath = null;
-  }
+  state.selectedDemos = state.selectedDemos.filter(path => filtered.some(x => x.filePath === path));
+  state.selectedDemoPath = state.selectedDemos[0] || null;
 }
 
 // Render Binds Table

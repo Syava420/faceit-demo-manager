@@ -751,5 +751,112 @@ namespace FaceitDemoManager
                 AppendLog("Ошибка копирования файла демки: " + ex.Message);
             }
         }
+
+        public void DeleteDemosWeb(System.Collections.Generic.List<string> filePaths)
+        {
+            if (filePaths == null || filePaths.Count == 0) return;
+
+            bool mr = ShowConfirmDialog("Удаление файлов", string.Format("Вы уверены, что хотите навсегда удалить выбранные демки ({0} шт.)?", filePaths.Count));
+            if (!mr) return;
+
+            string baseDir = GetDemosBaseDir();
+            int deletedCount = 0;
+
+            foreach (var filePath in filePaths)
+            {
+                if (string.IsNullOrEmpty(filePath)) continue;
+                string cleanPath = filePath.Replace('/', '\\');
+                if (!File.Exists(cleanPath)) continue;
+
+                try
+                {
+                    File.Delete(cleanPath);
+                    string relPath = cleanPath.Substring(baseDir.Length).TrimStart('\\', '/').Replace('\\', '/');
+                    if (metadataDb.ContainsKey(relPath))
+                    {
+                        metadataDb.Remove(relPath);
+                    }
+                    deletedCount++;
+                }
+                catch (Exception ex)
+                {
+                    ShowMessageDialog("Ошибка", string.Format("Не удалось удалить файл {0}: {1}", Path.GetFileName(cleanPath), ex.Message), true);
+                }
+            }
+
+            if (deletedCount > 0)
+            {
+                SaveEntireMetadataDb(baseDir);
+                SendAllStateToWeb();
+                AppendLog(string.Format("Успешно удалено файлов: {0}", deletedCount));
+            }
+        }
+
+        public void MoveSelectedDemosWebPrompt(System.Collections.Generic.List<string> filePaths)
+        {
+            if (filePaths == null || filePaths.Count == 0)
+            {
+                ShowMessageDialog("Информация", "Выберите хотя бы одну демку для переноса.");
+                return;
+            }
+
+            string target = ShowSelectFolderDialog("Куда перенести выбранные демки?");
+            if (string.IsNullOrEmpty(target)) return;
+
+            MoveDemosWeb(filePaths, target);
+        }
+
+        public void MoveDemosWeb(System.Collections.Generic.List<string> filePaths, string targetCategoryRelativePath)
+        {
+            if (filePaths == null || filePaths.Count == 0) return;
+            string baseDir = GetDemosBaseDir();
+            if (string.IsNullOrEmpty(baseDir)) return;
+
+            string targetPath = Path.Combine(baseDir, targetCategoryRelativePath);
+            if (!Directory.Exists(targetPath))
+            {
+                try { Directory.CreateDirectory(targetPath); } catch { }
+            }
+
+            int movedCount = 0;
+            foreach (var filePath in filePaths)
+            {
+                if (string.IsNullOrEmpty(filePath)) continue;
+                string cleanPath = filePath.Replace('/', '\\');
+                if (!File.Exists(cleanPath)) continue;
+
+                string fileName = Path.GetFileName(cleanPath);
+                string destPath = Path.Combine(targetPath, fileName);
+
+                if (cleanPath.Equals(destPath, StringComparison.OrdinalIgnoreCase)) continue;
+
+                try
+                {
+                    if (File.Exists(destPath)) File.Delete(destPath);
+                    File.Move(cleanPath, destPath);
+
+                    string oldRel = cleanPath.Substring(baseDir.Length).TrimStart('\\', '/').Replace('\\', '/');
+                    string newRel = destPath.Substring(baseDir.Length).TrimStart('\\', '/').Replace('\\', '/');
+
+                    DemoMetadata dm;
+                    if (metadataDb.TryGetValue(oldRel, out dm))
+                    {
+                        metadataDb.Remove(oldRel);
+                        DemoProcessor.SaveMetadataForDemo(baseDir, metadataDb, newRel, dm);
+                    }
+                    movedCount++;
+                }
+                catch (Exception ex)
+                {
+                    ShowMessageDialog("Ошибка", string.Format("Не удалось перенести демо {0}: {1}", fileName, ex.Message), true);
+                }
+            }
+
+            if (movedCount > 0)
+            {
+                SendAllStateToWeb();
+                AppendLog(string.Format("Успешно перемещено файлов: {0}", movedCount));
+            }
+        }
     }
 }
