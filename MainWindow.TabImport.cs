@@ -140,10 +140,22 @@ namespace FaceitDemoManager
                 return;
             }
 
-            string[] files = Directory.GetFiles(downloads, "*.dem.zst");
+            var list = new System.Collections.Generic.List<string>();
+            try
+            {
+                list.AddRange(Directory.GetFiles(downloads, "*.dem.zst"));
+                list.AddRange(Directory.GetFiles(downloads, "*.dem"));
+            }
+            catch (Exception ex)
+            {
+                AppendLog("Ошибка чтения папки загрузок: " + ex.Message);
+                return;
+            }
+
+            string[] files = list.ToArray();
             if (files.Length == 0)
             {
-                AppendLog("В папке загрузок не найдено новых файлов *.dem.zst");
+                AppendLog("В папке загрузок не найдено новых файлов *.dem.zst или *.dem");
                 return;
             }
 
@@ -170,8 +182,10 @@ namespace FaceitDemoManager
                 string downloads = txtDownloads != null ? txtDownloads.Text.Trim() : (settings != null ? settings.DownloadsPath : "");
                 if (Directory.Exists(downloads))
                 {
-                    dlWatcher = new FileSystemWatcher(downloads, "*.dem.zst");
-                    dlWatcher.Created += DlWatcher_Created;
+                    dlWatcher = new FileSystemWatcher(downloads);
+                    dlWatcher.Filter = "*.*";
+                    dlWatcher.Created += DlWatcher_EventTriggered;
+                    dlWatcher.Renamed += DlWatcher_Renamed;
                     bool isChecked = ChkWatchFolder != null ? ChkWatchFolder.IsChecked == true : (settings != null ? settings.WatchFolder : false);
                     dlWatcher.EnableRaisingEvents = isChecked;
                 }
@@ -182,10 +196,20 @@ namespace FaceitDemoManager
             }
         }
 
-        private void DlWatcher_Created(object sender, FileSystemEventArgs e)
+        private void DlWatcher_Renamed(object sender, RenamedEventArgs e)
         {
+            DlWatcher_EventTriggered(sender, e);
+        }
+
+        private void DlWatcher_EventTriggered(object sender, FileSystemEventArgs e)
+        {
+            string ext = Path.GetExtension(e.FullPath).ToLower();
+            if (ext != ".zst" && ext != ".dem") return;
+
+            // Wait a moment for browser locks to release
+            Thread.Sleep(1500);
+
             AppendLog("Обнаружен файл загрузки: " + e.Name);
-            Thread.Sleep(1000); // Wait for file handle to release
             
             string cs2 = "";
             this.Dispatcher.Invoke(new Action(() => {
@@ -216,6 +240,10 @@ namespace FaceitDemoManager
                     AppendLog("Авто-процессор: " + msg);
                 };
                 DemoProcessor.ProcessSingleFile(e.FullPath, targetCategory, cs2, nickForImport, metadataDb, logCallback, settings.DeleteArchivesAfterUnpack);
+                
+                this.Dispatcher.BeginInvoke(new Action(() => {
+                    SendAllStateToWeb();
+                }));
             }
             catch (Exception ex)
             {
