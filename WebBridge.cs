@@ -205,6 +205,14 @@ namespace FaceitDemoManager
                         }
                     }
                     break;
+                case "copyDemoConfig":
+                    {
+                        if (root.TryGetProperty("filePath", out JsonElement configPathProp))
+                        {
+                            _mainWindow.CopyDemoConfigToClipboard(configPathProp.GetString());
+                        }
+                    }
+                    break;
             }
         }
 

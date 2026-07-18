@@ -341,39 +341,7 @@ function getFolderNickname(folderPath, customSettings) {
     postNativeMessage({ action: 'resetBindsToDefault' });
   });
 
-  // Modal Dialog Actions
-  document.getElementById('btnMdlClose')?.addEventListener('click', closeEditDemoModal);
-  document.getElementById('btnMdlCancel')?.addEventListener('click', closeEditDemoModal);
-  document.getElementById('btnMdlSave')?.addEventListener('click', () => {
-    if (!currentEditingDemoPath) return;
 
-    const mapVal = document.getElementById('txtEditMap')?.value.trim() || '';
-    const scoreVal = document.getElementById('txtEditScore')?.value.trim() || '';
-    const kdVal = document.getElementById('txtEditKD')?.value.trim() || '';
-    const dateVal = document.getElementById('txtEditDate')?.value.trim() || '';
-    const noteVal = document.getElementById('txtNoteEdit')?.value.trim() || '';
-
-    const d = state.demos.find(x => x.filePath === currentEditingDemoPath);
-    if (d) {
-      d.map = mapVal;
-      d.score = scoreVal;
-      d.kd = kdVal;
-      d.date = dateVal;
-      d.note = noteVal;
-    }
-
-    postNativeMessage({
-      action: 'saveDemoMetadata',
-      filePath: currentEditingDemoPath,
-      map: mapVal,
-      score: scoreVal,
-      kd: kdVal,
-      date: dateVal,
-      note: noteVal
-    });
-
-    closeEditDemoModal();
-  });
 
   // Search Input
   if (elements.txtSearch) {
@@ -529,14 +497,17 @@ function renderDemos() {
       <td>${d.date || '-'}</td>
       <td>${d.note || ''}</td>
       <td>
-        <button class="btn-secondary btn-icon-sm" onclick="event.stopPropagation(); playSingleDemo('${d.filePath}')" title="Играть">▶ Играть</button>
-        <button class="btn-secondary btn-icon-sm" onclick="event.stopPropagation(); openEditDemoModal('${d.filePath}')" title="Редактировать">✏️ Редактировать</button>
+        <button class="btn-secondary btn-icon-sm" onclick="event.stopPropagation(); playSingleDemo('${d.filePath}')" title="Играть в CS2">▶ Играть</button>
+        <button class="btn-secondary btn-icon-sm" onclick="event.stopPropagation(); copyDemoConfig('${d.filePath}')" title="Скопировать консольную команду">📋 Конфиг</button>
       </td>
     `;
     tr.addEventListener('click', () => {
       document.querySelectorAll('.demo-table tr').forEach(r => r.classList.remove('selected'));
       tr.classList.add('selected');
       state.selectedDemoPath = d.filePath;
+    });
+    tr.addEventListener('dblclick', () => {
+      playSingleDemo(d.filePath);
     });
     tr.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/demo-filepath', d.filePath);
@@ -680,39 +651,6 @@ function showCategoryContextMenu(e, cat) {
   setTimeout(() => document.addEventListener('click', closeMenu), 0);
 }
 
-// Render Selected Demo Details Panel
-let currentEditingDemoPath = null;
-
-function openEditDemoModal(filePath) {
-  const d = state.demos.find(x => x.filePath === filePath);
-  if (!d) return;
-
-  currentEditingDemoPath = filePath;
-
-  const txtMap = document.getElementById('txtEditMap');
-  const txtScore = document.getElementById('txtEditScore');
-  const txtKD = document.getElementById('txtEditKD');
-  const txtDate = document.getElementById('txtEditDate');
-  const txtNote = document.getElementById('txtNoteEdit');
-
-  if (txtMap) txtMap.value = d.map || '';
-  if (txtScore) txtScore.value = d.score || '';
-  if (txtKD) txtKD.value = d.kd || '';
-  if (txtDate) txtDate.value = d.date || '';
-  if (txtNote) txtNote.value = d.note || '';
-
-  const modal = document.getElementById('mdlEditDemo');
-  if (modal) {
-    modal.style.display = 'flex';
-    setTimeout(() => modal.classList.add('active'), 10);
-  }
-}
-
-function closeEditDemoModal() {
-  const modal = document.getElementById('mdlEditDemo');
-  if (modal) {
-    modal.classList.remove('active');
-    setTimeout(() => modal.style.display = 'none', 250);
-  }
-  currentEditingDemoPath = null;
+function copyDemoConfig(filePath) {
+  postNativeMessage({ action: 'copyDemoConfig', filePath: filePath });
 }

@@ -692,5 +692,55 @@ namespace FaceitDemoManager
             // Re-send updated list to web UI
             SendDemosToWeb();
         }
+
+        public void CopyDemoConfigToClipboard(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) return;
+
+            string baseDir = GetDemosBaseDir();
+            // Copy selected demo to target faceit.dem in General
+            string destPath = Path.Combine(Path.Combine(baseDir, "General"), "faceit.dem");
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(destPath));
+                File.Copy(filePath, destPath, true);
+            }
+            catch (Exception ex)
+            {
+                AppendLog("Ошибка подготовки копирования конфига: " + ex.Message);
+                return;
+            }
+
+            // Always copy command to clipboard for easy manual play
+            string playCmd = "playdemo faceit_demos/General/faceit.dem";
+            if (settings.EnableDemoVoice)
+            {
+                playCmd += "; tv_listen_voice_indices -1; tv_listen_voice_indices_h -1";
+            }
+
+            // Append active CS2 binds to clipboard
+            if (settings.AutoApplyBinds && settings.Binds != null)
+            {
+                foreach (var b in settings.Binds)
+                {
+                    if (b.IsEnabled && !string.IsNullOrEmpty(b.Key) && !string.IsNullOrEmpty(b.Command))
+                    {
+                        playCmd += string.Format("; bind \"{0}\" \"{1}\"", b.Key, b.Command);
+                    }
+                }
+            }
+
+            try
+            {
+                this.Dispatcher.Invoke(() => {
+                    Clipboard.SetText(playCmd);
+                });
+                AppendLog("Конфиг для запуска скопирован в буфер обмена!");
+            }
+            catch (Exception ex)
+            {
+                AppendLog("Не удалось скопировать в буфер обмена: " + ex.Message);
+            }
+        }
     }
 }
